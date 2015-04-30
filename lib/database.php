@@ -73,3 +73,47 @@ function closeConnection($hostId) {
     }
     return $result;
 }
+
+/**
+ * @param mysqli $link подключение к базе
+ * @param string $query запрос
+ * 
+ * @return mixed|null значение из первой ячейки первой строки результата запроса или null, если запрос не вернул строк
+ * 
+ * @throws Exception при ошибках выполнения запроса
+ */
+function fetchOne(mysqli $link, $query) {
+    $result = mysqli_query($link, $query);
+    if ($result === false) {
+        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+    } elseif ($result->num_rows == 0) {
+        return null;
+    }
+    
+    $row = mysqli_fetch_row($result);
+    mysqli_free_result($result);
+    return $row[0];
+}
+
+/**
+ * @param mysqli $link подключение к базе
+ * @param string $query запрос
+ * 
+ * @return array все данные запроса в виде ассоциативных массивов
+ * 
+ * @throws Exception при ошибках выполнения запроса
+ */
+function fetchAll(mysqli $link, $query) {
+    $result = mysqli_query($link, $query);
+    if ($result === false) {
+        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+    } 
+    
+    $rows = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $rows[] = $row;
+    }
+    
+    mysqli_free_result($result);
+    return $rows;
+}

@@ -22,19 +22,6 @@ const SHARD_RECORD_TYPE_SHARD = 0;
 const SHARD_RECORD_TYPE_USER = 1;
 
 /**
- * Загружает данные авторизованного пользователя 
- * 
- * @return array|null
- */
-function authorize() {
-	$userId = (int) filter_input(INPUT_SESSION, 'uid', FILTER_VALIDATE_INT);
-	$passwordHash = (string) filter_input(INPUT_SESSION, 'pass');
-	if ($userId <= 0 || $passwordHash == '') {
-		return null;
-	}
-}
-
-/**
  * Получить юзера по ID из базы
  * 
  * @param int $userId ID юзера
