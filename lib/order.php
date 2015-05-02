@@ -4,8 +4,28 @@
  * 
  * @author mkoshkin
  */
-
 namespace Order;
+
+/**
+ * @param \mysqli $link подключение к шарде с заказами пользователя
+ * @param int $userId ID пользователя
+ * @param int $minOrderId минимальный ID заказа в шарде
+ * 
+ * @return int ID следующего заказа
+ */
+function loadNextOrderId(\mysqli $link, $userId, $minOrderId) {
+    $result = mysqli_query($link, 'SELECT order_id FROM users_orders WHERE user_id=' . $userId . ' ORDER BY order_id DESC LIMIT 1');
+    if ($result === false) {
+        throw new Exception('Ошибка выполнения запроса: ' . mysqli_error($link));
+    } elseif ($result->num_rows == 0) {
+        $orderId = $minOrderId;
+    } else {
+        $row = $result->fetch_row();
+        $orderId = (int) $row[0] + 1;
+    }
+    
+    return $orderId;
+}
 
 /**
  * @param int $userId ID пользователя

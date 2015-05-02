@@ -25,10 +25,25 @@ function getConnection($hostId) {
     $connectionLinksMap =& getConnections();
     
     if (!array_key_exists($hostId, $connectionLinksMap)) {
-        $connectionLinksMap[$hostId] = mysqli_connect(getHostName($hostId), 'root', '123', 'mts');
+        $connectionLinksMap[$hostId] = mysqli_connect(getHostName($hostId), 'root', '123', 'mts', getHostPort($hostId));
     }
     
     return $connectionLinksMap[$hostId];
+}
+
+/**
+ * @param int $hostId ID хоста
+ * 
+ * @return mysqli открытое подключение к указанному хосту
+ * 
+ * @throws Exception когда невозможно открыть подключение к хосту
+ */
+function getConnectionOrFall($hostId) {
+    $link = getConnection($hostId);
+    if ($link === false) {
+        throw new Exception('Невозможно подключиться к хосту [' . $hostId . ']');
+    }
+    return $link;
 }
 
 /**
@@ -40,6 +55,15 @@ function getConnection($hostId) {
  */
 function getHostName($hostId) {
     return 'host' . $hostId . '.database';
+}
+
+/**
+ * @param int $hostId
+ * 
+ * @return int номер порта для подключения
+ */
+function getHostPort($hostId) {
+    return 3305 + $hostId;
 }
 
 /**

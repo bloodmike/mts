@@ -26,7 +26,7 @@ function checkSessionStarted() {
 /**
  * @return int ID авторизованного пользователя
  */
-function setCurrentUserId() {
+function getCurrentUserId() {
     checkSessionStarted();
     
     if (array_key_exists(USER_ID_SESSION_KEY, $_SESSION)) {

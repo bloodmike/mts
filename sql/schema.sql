@@ -5,7 +5,7 @@ CREATE TABLE `users`(
     `id`		BIGINT			NOT NULL UNSIGNED,
     `login`		VARCHAR(25)		NOT NULL,
     `password`	VARCHAR(50)		NOT NULL,
-    `balance`	DECIMAL(10,5)	NOT NULL UNSIGNED DEFAULT '0.00',
+    `balance`	DECIMAL(10,5)	NOT NULL UNSIGNED DEFAULT 0.00,
     PRIMARY KEY (`id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
