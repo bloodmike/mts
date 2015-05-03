@@ -30,3 +30,28 @@ CREATE TABLE `users_orders_shards`(
     `host_id`       INT     NOT NULL UNSIGNED, -- ID хоста, где лежат данные заказов
     PRIMARY KEY(`user_id`, `from_order_id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
+
+--
+-- Таблица с заказами пользователей
+--
+CREATE TABLE `users_orders`(
+    `user_id`           BIGINT          NOT NULL UNSIGNED, -- ID заказчика
+    `order_id`          BIGINT          NOT NULL UNSIGNED, -- ID заказа
+    `ts`                BIGINT          NOT NULL UNSIGNED, -- unix-время добавления заказа
+    `price`             DECIMAL(10,2)   NOT NULL UNSIGNED DEFAULT '0.00', -- сумма заказа
+    `finished`          TINYINT         NOT NULL UNSIGNED DEFAULT '0', -- выполнен ли заказ
+    `finished_user_id`  BIGINT          NOT NULL UNSIGNED, -- ID исполнителя заказа
+    PRIMARY KEY(`user_id`, `order_id`),
+    KEY(`user_id`, `finished`, `order_id`)
+) ENGINE=innoDB DEFAULT CHARSET=utf8;
+
+--
+-- Таблица с лентой заказов.
+-- В ленте содержатся только невыполненные заказы.
+--
+CREATE TABLE `orders`(
+    `ts`                        NOT NULL UNSIGNED, -- unix-время добавления заказа
+    `user_id`   BIGINT          NOT NULL UNSIGNED, -- ID заказчика
+    `order_id`  BIGINT          NOT NULL UNSIGNED, -- ID заказа
+    `price`     DECIMAL(10,2)   NOT NULL UNSIGNED DEFAULT '0.00', -- сумма заказа
+);
