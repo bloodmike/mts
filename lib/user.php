@@ -74,14 +74,18 @@ function getHostConnection($userId) {
         return null;
     }
     
-    $link = Database\getConnection($hostId);
-    if ($link === false) {
-        throw new Exception('Ошибка при получении подключения к хосту [' . $hostId . ']');
-    }
-    
-    return $link;
+    return Database\getConnectionOrFall($hostId);
 }
 
+/**
+ * @return mysqli|null открытое подключение к хосту с данными текущего пользователя, 
+ *                      null - если пользователь не авторизован или хост не найден
+ * 
+ * @throws Exception при ошибках в поиске хоста или невозможности открыть подключение к хосту
+ */
+function getHostConnectionForCurrentUser() {
+    return getHostConnection(\Auth\getCurrentUserId());
+}
 
 /**
  * Ищет хост, на котором лежат данные пользователя
