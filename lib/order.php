@@ -76,13 +76,14 @@ function fetchHostIdForNewOrder(\mysqli $link, $userId) {
  * @param \mysqli $link подключение к хосту с данными пользователя
  * @param int $userId ID пользователя
  * 
- * @return int ID хоста, куда добавляются заказы пользователя
+ * @return array|null данные о хосте, куда добавляются новые запросы пользователя:
+ *						host_id , from_order_id
  */
-/*function fetchHostInfoForNewOrder(\mysqli $link, $userId) {
-    return (int) \Database\fetchOne(
+function fetchHostInfoForNewOrder(\mysqli $link, $userId) {
+    return \Database\fetchRow(
             $link, 
-            'SELECT host_id FROM users_orders_shards WHERE user_id=' . $userId . ' ORDER BY from_order_id DESC LIMIT 1');
-}*/
+            'SELECT host_id, from_order_id FROM users_orders_shards WHERE user_id=' . $userId . ' ORDER BY from_order_id DESC LIMIT 1');
+}
 
 /**
  * @param int $userId ID пользователя-владельца заказа
@@ -124,6 +125,23 @@ function fetchHostId(\mysqli $link, $userId, $orderId) {
 }
 
 /**
+ * @param \mysqli $link подключение к хосту с данными пользователя
+ * @param int $userId ID пользователя
+ * @param int $orderId ID заказа
+ * 
+ * @return array|null данные хоста, где может находиться указанный заказ пользователя: host_id, from_order_id;
+ *              null - если заказа нет пользователя
+ */
+function fetchHostInfo(\mysqli $link, $userId, $orderId) {
+    return \Database\fetchRow(
+            $link, 
+            'SELECT host_id, from_order_id '
+            . 'FROM users_orders_shards '
+            . 'WHERE user_id=' . $userId . ' AND order_id <= ' . $orderId . ' '
+            . 'ORDER BY order_id DESC LIMIT 1');
+}
+
+/**
  * @param int $userId ID заказчика
  * @param int $status статус загружаемых записей (см. Order\LOAD_USER_ORDERS_...)
  * @param int|null $maxOrderId ограничение по ID заказа сверху (null - нет ограничений)
@@ -149,14 +167,18 @@ function loadListForUser($userId, $status = LOAD_USER_ORDERS_ALL, $maxOrderId = 
     do {
         // получает хост, с которого нужно забирать записи
         if ($maxOrderId === null) {
-            $hostId = fetchHostIdForNewOrder($userHostLink, $userId);
+            $hostInfo = fetchHostInfoForNewOrder($userHostLink, $userId);
         } else {
-            $hostId = fetchHostId($userHostLink, $userId, $maxOrderId - 1);
+            $hostInfo = fetchHostInfo($userHostLink, $userId, $maxOrderId - 1);
         }
         
-        $link = Database\getConnection($hostId);
+		if ($hostInfo === null) {
+			return [];
+		}
+		
+        $link = Database\getConnection($hostInfo['host_id']);
         if ($link === false) {
-            throw new Exception('Не удалось подключиться к хосту [' . $hostId . ']');
+            throw new Exception('Не удалось подключиться к хосту [' . $hostInfo['host_id'] . ']');
         }
         
         // собираем условия запроса
@@ -186,10 +208,11 @@ function loadListForUser($userId, $status = LOAD_USER_ORDERS_ALL, $maxOrderId = 
             $lastRow = end($rows);
             $maxOrderId = $lastRow['order_id'];
         } else {
-            // TODO: в шарде нет записей - нужно переключиться на следующую шарду
+            // в шарде нет записей - нужно переключиться на следующую шарду
+			$maxOrderId = $hostInfo['from_order_id'];
         }
         
-    } while (count($orders)  < $limit || $maxOrderId == 1);
+    } while (count($orders)  < $limit || $maxOrderId <= 1);
     
     return $orders;
 }

@@ -49,7 +49,7 @@ CREATE TABLE `users_orders`(
 -- Таблица с лентой заказов.
 -- В ленте содержатся только невыполненные заказы.
 --
-CREATE TABLE `orders`(
+CREATE TABLE `orders_digest`(
     `ts`                        NOT NULL UNSIGNED, -- unix-время добавления заказа
     `user_id`   BIGINT          NOT NULL UNSIGNED, -- ID заказчика
     `order_id`  BIGINT          NOT NULL UNSIGNED, -- ID заказа

@@ -141,3 +141,24 @@ function fetchAll(mysqli $link, $query) {
     mysqli_free_result($result);
     return $rows;
 }
+
+/**
+ * @param mysqli $link подключение к базе
+ * @param string $query запрос
+ * 
+ * @return array|null первую строку результата запроса или null, если запрос не вернул строк
+ * 
+ * @throws Exception при ошибках выполнения запроса
+ */
+function fetchRow(mysqli $link, $query) {
+    $result = mysqli_query($link, $query);
+    if ($result === false) {
+        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+    } elseif ($result->num_rows == 0) {
+        return null;
+    }
+    
+    $row = mysqli_fetch_assoc($result);
+    mysqli_free_result($result);
+    return $row;
+}
