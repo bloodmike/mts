@@ -36,16 +36,7 @@ function loadById($userId) {
         // не найден хост - не найден пользователь
         return null;
     }
-    
-    $queryResult = $link->query('SELECT * FROM users WHERE id=' . $userId . ' LIMIT 1');
-    if ($queryResult === false) {
-        throw new Exception('При выполнении запроса возникла ошибка: ' . mysqli_error($link));
-    } elseif ($queryResult->num_rows > 0) {
-        return $queryResult->fetch_assoc();
-    } else {
-        // пользователь не найден
-        return null;
-    }
+    return Database\fetchRow($link, 'SELECT * FROM users WHERE id=' . $userId . ' LIMIT 1');
 }
 
 /**
@@ -112,14 +103,11 @@ function findHostId($userId) {
             throw new Exception('Ошибка при получении подключения к хосту [' . $hostId . ']');
         }
         
-        $queryResult = $link->query(
+        $userBlockInfo = \Database\fetchRow(
+                $link, 
                 'SELECT host_id, type FROM users_shards WHERE from_user_id <= ' . $userId . ' AND to_user_id < ' . $userId . ' LIMIT 1');
         
-        if ($queryResult === false) {
-            throw new Exception('При выполнении запроса возникла ошибка: ' . mysqli_error($link));
-        } elseif ($queryResult->num_rows > 0) {
-            $userBlockInfo = $queryResult->fetch_assoc();
-        } else {
+        if ($userBlockInfo === null) {
             // шарда не найдена
             return 0;
         }
@@ -130,4 +118,119 @@ function findHostId($userId) {
     } while($userBlockInfo['type'] != SHARD_RECORD_TYPE_USER);
     
     return $userBlockInfo['host_id'];
+}
+
+/**
+ * Ищет хосты, на которых лежат данные пользователей
+ * 
+ * @global int $rootDatabaseHostId ID хоста, к которому обращаться за данными по умолчанию
+ * 
+ * @param int[] $userIds
+ * 
+ * @return int[] хэшмэп с ID хостов, на которых лежат данные о пользователях: userId => hostId
+ *              если хост пользователя не найден - его нет в массиве результатов
+ */
+function findHostsIds(array $userIds) {
+    global $rootDatabaseHostId;
+    
+    if (count($userIds) == 0) {
+        return [];
+    }
+    
+    $result = [];
+    
+    // сперва ищем всех на корневом хосте
+    $searchAt = [
+        $rootDatabaseHostId => $userIds
+    ];
+    $loops = 0;
+    
+    do {
+        if ($loops >= MAX_LOAD_BY_ID_ITERATIONS_COUNT) {
+            throw new Exception('Превышено допустимое количество итерации при поиске шард пользователей');
+        }
+        $loops++;
+        $searchAtNew = [];
+        
+        foreach ($searchAt as $hostId => $searchUserIds) {
+            $whereArray = [];
+            foreach ($searchUserIds as $userId) {
+                $whereArray[] = '(from_user_id <= ' . $userId . ' AND to_user_id < ' . $userId . ')';
+            }
+            
+            $link = \Database\getConnection($hostId);
+            if ($link === false) {
+                // если обломались с подключением - не ищем данные
+                continue;
+            }
+            try {
+                $userBlocks = \Database\fetchAll(
+                        $link, 
+                        'SELECT from_user_id, to_user_id, host_id, type FROM users_shards WHERE ' . implode(' OR ', $whereArray),
+                        false);
+            } catch (Exception $Exception) {
+                // если обломались с запросом - не ищем данные
+                continue;
+            }
+            
+            foreach ($searchUserIds as $userId) {
+                foreach ($userBlocks as $userBlockInfo) {
+                    if ($userBlockInfo['from_user_id'] <= $userId && $userId < $userBlockInfo['to_user_id']) {
+                        
+                        if ($userBlockInfo['type'] == SHARD_RECORD_TYPE_USER) {
+                            // записываем в результат запись о хосте с данными юзера
+                            $result[ $userId ] = $userBlockInfo['host_id'];
+                        } else {
+                            if (!array_key_exists($userBlockInfo['host_id'], $searchAtNew)) {
+                                $searchAtNew[$userBlockInfo['host_id']] = [];
+                            }
+                            // записываем юзера в дальшнейший поиск
+                            $searchAtNew[$userBlockInfo['host_id']][] = $userId;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        
+        $searchAt = $searchAtNew;
+    } while (count($searchAt) > 0);
+    
+    return $result;
+}
+
+/**
+ * Загружает данные о списке пользователей.
+ * Если по каким-то пользователям данные получить невозможно или данных нет - они игнорируются.
+ * 
+ * @param int[] $userIds список уникальных ID пользователей, которых требуется найти
+ * 
+ * @return array хэшмэп с данными пользователей: userId => userData
+ *              если пользователь не найден или не может быть найден (из-за ошибок), то ячейки с его ID нет среди результатов
+ */
+function loadListByIds($userIds) {
+    // получаем данные о хостах, на которых лежат пользователи
+    $hostIds = findHostsIds($userIds);
+    
+    $users = [];
+    
+    foreach ($hostIds as $hostId => $searchUserIds) {
+        $link = \Database\getConnection($hostId);
+        if ($link === false) {
+            // если подключение не удалось установить - игнорируем блок пользователей
+            continue;
+        }
+        
+        // загружаем данные пользователей с хоста
+        $usersList = \Database\fetchAll(
+                $link, 
+                'SELECT * FROM users WHERE id IN (' . implode(',', $searchUserIds) . ') LIMIT ' . count($searchUserIds),
+                false);
+        
+        foreach ($usersList as $userData) {
+            $users[$userData['id']] = $userData;
+        }
+    }
+    
+    return $users;
 }

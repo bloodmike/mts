@@ -122,23 +122,26 @@ function fetchOne(mysqli $link, $query) {
 /**
  * @param mysqli $link подключение к базе
  * @param string $query запрос
+ * @param bool $throwOnError выбрасывать исключение при ошибке (если true) или возвращать пустой результат (если false)
  * 
  * @return array все данные запроса в виде ассоциативных массивов
  * 
  * @throws Exception при ошибках выполнения запроса
  */
-function fetchAll(mysqli $link, $query) {
+function fetchAll(mysqli $link, $query, $throwOnError = true) {
     $result = mysqli_query($link, $query);
-    if ($result === false) {
-        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
-    } 
     
     $rows = [];
-    while ($row = mysqli_fetch_assoc($result)) {
-        $rows[] = $row;
+    if ($result === false) {
+        if ($throwOnError) {
+            throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+        }
+    } else {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $rows[] = $row;
+        }
+        mysqli_free_result($result);
     }
-    
-    mysqli_free_result($result);
     return $rows;
 }
 
