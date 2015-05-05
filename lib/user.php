@@ -200,12 +200,12 @@ function findHostsIds(array $userIds) {
 }
 
 /**
- * Загружает данные о списке пользователей.
+ * Загружает логины пользователей.
  * Если по каким-то пользователям данные получить невозможно или данных нет - они игнорируются.
  * 
  * @param int[] $userIds список уникальных ID пользователей, которых требуется найти
  * 
- * @return array хэшмэп с данными пользователей: userId => userData
+ * @return string[] хэшмэп с логинами пользователей: userId => userLogin
  *              если пользователь не найден или не может быть найден (из-за ошибок), то ячейки с его ID нет среди результатов
  */
 function loadListByIds($userIds) {
@@ -224,11 +224,11 @@ function loadListByIds($userIds) {
         // загружаем данные пользователей с хоста
         $usersList = \Database\fetchAll(
                 $link, 
-                'SELECT * FROM users WHERE id IN (' . implode(',', $searchUserIds) . ') LIMIT ' . count($searchUserIds),
+                'SELECT id, login FROM users WHERE id IN (' . implode(',', $searchUserIds) . ') LIMIT ' . count($searchUserIds),
                 false);
         
         foreach ($usersList as $userData) {
-            $users[$userData['id']] = $userData;
+            $users[$userData['id']] = $userData['login'];
         }
     }
     

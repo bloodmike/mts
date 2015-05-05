@@ -45,3 +45,90 @@ function findHostId($userId, $orderId, $ts) {
     
     return $hostId;
 }
+
+/**
+ * Загружает заказы из дайджеста
+ * 
+ * @global int $rootDatabaseHostId ID хоста, к которому нужно обращаться по умолчанию
+ * 
+ * @param int $limit количество загружаемых записей
+ * @param int $maxTs ограничение по времени добавления сверху
+ * 
+ * @return array данные заказов
+ * 
+ * @throws Exception при ошибках в работе с базой
+ */
+function loadOrders($limit, $maxTs) {
+    global $rootDatabaseHostId;
+    
+    $link = \Database\getConnectionOrFall($rootDatabaseHostId);
+    $orders = [];
+        
+    do {
+        $hostIds = \Database\fetchPairs(
+                $link, 
+                'SELECT host_id, from_ts '
+                . 'FROM orders_digest_shards '
+                . 'WHERE from_ts <= ' . $maxTs . ' AND ' . $maxTs . ' < to_ts');
+
+        if (count($hostIds) == 0) {
+            break;
+        }
+        
+        $shardOrders = [];
+        
+        foreach ($hostIds as $hostId) {
+            $digestLink = \Database\getConnectionOrFall($hostId);
+            $shardOrders[$hostId] = \Database\fetchAll(
+                    $digestLink, 
+                    'SELECT * '
+                    . 'FROM orders_digest '
+                    . 'WHERE ts <= ' . $maxTs . ' '
+                    . 'ORDER BY ts DESC, user_id DESC, order_id DESC '
+                    . 'LIMIT ' . ($limit - count($orders)));
+        }
+        
+        $foundOrders = mergeSortOrders($shardOrders, ($limit - count($orders)));
+        $orders = array_merge($orders, $foundOrders);
+    } while (count($orders) < $limit);
+    
+    return $orders;
+}
+
+/**
+ * @todo протестировать
+ * 
+ * @param array $shardOrders сгруппированные по ID хостов заказы
+ * @param int $limit предельное количество записей в списке, который нужно получить
+ * 
+ * @return array отсортированный список, состоящий из переданных заказов и ограниченный по длине
+ */
+function mergeSortOrders($shardOrders, $limit) {
+    $result = [];
+    
+    if (count($shardOrders) == 1) {
+        return array_slice($shardOrders, 0, $limit);
+    }
+    
+    do {
+        $allEmpty = true;
+        $maxOrderTsKey = null;
+        
+        foreach ($shardOrders as $key => &$orders) {
+            if (current($orders) !== false &&
+                    ($maxOrderTsKey === null || 
+                    current($shardOrders[$maxOrderTsKey])['ts'] < current($orders)['ts'])) {
+                
+                $minOrderTsKey = $key;
+                $allEmpty = false;
+            }
+        }
+        
+        if ($minOrderTsKey !== null) {
+            $result[] = current($shardOrders[$maxOrderTsKey]);
+            next($shardOrders[$maxOrderTsKey]);
+        }
+    } while (!$allEmpty && count($result) < $limit);
+    
+    return $result;
+}

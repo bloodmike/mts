@@ -1,6 +1,8 @@
 <?php
 /** 
  * Обработать заявку
+ * 
+ * @author mkoshkin
  */
 
 require_once('../lib/autoload.php');
@@ -33,4 +35,4 @@ function executeOrder() {
     return $response;
 }
 
-echo json_encode(executeOrder());
+echo json_encode(executeOrder(), JSON_UNESCAPED_UNICODE);

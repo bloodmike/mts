@@ -165,3 +165,27 @@ function fetchRow(mysqli $link, $query) {
     mysqli_free_result($result);
     return $row;
 }
+
+/**
+ * @param mysqli $link подключение к базе
+ * @param string $query запрос
+ * 
+ * @return array|null список значений из первого столбца возвращаемых запросом данных
+ * 
+ * @throws Exception при ошибках выполнения запроса
+ */
+function fetchSingle(mysqli $link, $query) {
+    $result = mysqli_query($link, $query);
+    if ($result === false) {
+        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+    }
+    
+    $values = [];
+    if (mysqli_num_rows($result) > 0) { 
+        while ($row = mysqli_fetch_row($result)) {
+            $values[] = $row[0];
+        }
+    }
+    mysqli_free_result($result);
+    return $values;
+}
