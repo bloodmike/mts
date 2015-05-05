@@ -46,12 +46,25 @@ CREATE TABLE `users_orders`(
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
 --
--- Таблица с лентой заказов.
--- В ленте содержатся только невыполненные заказы.
+-- Таблица с дайджестом заказов.
+-- В дайджестом содержатся только невыполненные заказы.
 --
 CREATE TABLE `orders_digest`(
-    `ts`                        NOT NULL UNSIGNED, -- unix-время добавления заказа
+    `ts`        BIGINT          NOT NULL UNSIGNED, -- unix-время добавления заказа
     `user_id`   BIGINT          NOT NULL UNSIGNED, -- ID заказчика
     `order_id`  BIGINT          NOT NULL UNSIGNED, -- ID заказа
     `price`     DECIMAL(10,2)   NOT NULL UNSIGNED DEFAULT '0.00', -- сумма заказа
-);
+    PRIMARY KEY(`ts`, `user_id`, `order_id`)
+) ENGINE=innoDB DEFAULT CHARSET=utf8;
+
+--
+-- Таблица с данными о шардах даджеста.
+--
+CREATE TABLE `orders_digest_shards`(
+    `from_ts`   BIGINT NOT NULL UNSIGNED, -- минимальное unix-время заявки (включительно)
+    `to_ts`     BIGINT NOT NULL UNSIGNED, -- максимальное unix-время заявки (не включительно)
+    `from_hash` VARCHAR(32) NOT NULL DEFAULT '',
+    `to_hash`   VARCHAR(32) NOT NULL DEFAULT '',
+    `host_id`   INT     NOT NULL UNSIGNED, -- ID хоста
+    PRIMARY KEY(`from_ts`, `to_ts`, `from_hash`, `to_hash`)
+) ENGINE=innoDB DEFAULT CHARSET=utf8;

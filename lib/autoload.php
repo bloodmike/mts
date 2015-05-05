@@ -17,4 +17,11 @@ require_once(__DIR__ . '/../' . $environmentVersion . '.php');
 require_once(__DIR__ . '/database.php');
 require_once(__DIR__ . '/user.php');
 require_once(__DIR__ . '/order.php');
+require_once(__DIR__ . '/order_digest.php');
 require_once(__DIR__ . '/action.php');
+
+
+// регистрируем функцию, вызываемую после выполнения скрипта
+register_shutdown_function(function() {
+    \Database\closeConnections();
+});

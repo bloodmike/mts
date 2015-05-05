@@ -125,7 +125,7 @@ function findHostId($userId) {
  * 
  * @global int $rootDatabaseHostId ID хоста, к которому обращаться за данными по умолчанию
  * 
- * @param int[] $userIds
+ * @param int[] $userIds список уникальных ID пользователей
  * 
  * @return int[] хэшмэп с ID хостов, на которых лежат данные о пользователях: userId => hostId
  *              если хост пользователя не найден - его нет в массиве результатов
@@ -163,13 +163,13 @@ function findHostsIds(array $userIds) {
                 // если обломались с подключением - не ищем данные
                 continue;
             }
-            try {
-                $userBlocks = \Database\fetchAll(
-                        $link, 
-                        'SELECT from_user_id, to_user_id, host_id, type FROM users_shards WHERE ' . implode(' OR ', $whereArray),
-                        false);
-            } catch (Exception $Exception) {
-                // если обломались с запросом - не ищем данные
+            
+            $userBlocks = \Database\fetchAll(
+                    $link, 
+                    'SELECT from_user_id, to_user_id, host_id, type FROM users_shards WHERE ' . implode(' OR ', $whereArray),
+                    false);
+            
+            if (count($userBlocks) == 0) {
                 continue;
             }
             

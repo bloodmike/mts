@@ -18,6 +18,16 @@ namespace DoLog;
 const REMOVE_ORDER_FROM_DIGEST = 1;
 
 /**
+ * Добавление заказа в дайджест
+ */
+const ADD_ORDER_TO_DIGEST = 2;
+
+/**
+ * Обновление баланса пользователя
+ */
+const UPDATE_USER_BALANCE = 3;
+
+/**
  * Вносит запись о действии в лог.
  * 
  * @param int $actionCode код действия
@@ -51,12 +61,37 @@ function writeRecord($actionCode, $data) {
 /**
  * Добавить в лог операций удаление заказа из дайджеста
  * 
- * @param int $userId
- * @param int $orderId
- * @param int $ts
+ * @param int $userId ID заказчика
+ * @param int $orderId ID заказа
+ * @param int $ts unix-время создания заказа
  * 
  * @return bool удалось ли добавить запись в лог
  */
 function appendRemoveFromDigest($userId, $orderId, $ts) {
     return writeRecord(REMOVE_ORDER_FROM_DIGEST, [$userId, $orderId, $ts]);
+}
+
+/**
+ * Добавить в лог операций внесение заказа в дайджест
+ * 
+ * @param int $userId ID заказчика
+ * @param int $orderId ID заказа
+ * @param int $ts unix-время создания заказа
+ * 
+ * @return bool удалось ли внести запись в лог
+ */
+function appendAddToDigest($userId, $orderId, $ts) {
+    return writeRecord(ADD_ORDER_TO_DIGEST, [$userId, $orderId, $ts]);
+}
+
+/**
+ * Добавить в лог операций обновление баланса пользователя
+ * 
+ * @param int $userId
+ * @param int $balanceDelta
+ * 
+ * @return bool удалось ли добавить запись в лог
+ */
+function appendUpdateUserBalance($userId, $balanceDelta) {
+    return writeRecord(UPDATE_USER_BALANCE, [$userId, $balanceDelta]);
 }

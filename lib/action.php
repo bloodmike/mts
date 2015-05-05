@@ -7,6 +7,8 @@
  */
 namespace Action;
 
+use Exception;
+
 /**
  * Процент комиссии, взымаемый системой
  */
@@ -74,34 +76,69 @@ function createOrder($price) {
 }
 
 /**
- * Добавляет заказ в ленту заказов
+ * Добавляет заказ в дайджест
  * 
- * @todo сделать
+ * @param int $userId ID заказчика
+ * @param int $orderId ID заказа
+ * @param int $ts unix-время добавления заказа
+ * @param double $price стоимость заказа
  * 
- * @param int $userId
- * @param int $orderId
- * @param int $ts
- * @param double $price
- * 
- * @return bool
+ * @return bool удалось ли добавить заказ в дайджест
  */
 function addOrderToDigest($userId, $orderId, $ts, $price) {
-    return false;
+    $return = true;
+    try {
+        $hostId = \Digest\findHostId($userId, $orderId, $ts);
+
+        $link = \Database\getConnectionOrFall($hostId);
+
+        $result = mysqli_query(
+                $link, 
+                'INSERT IGNORE INTO orders_digest(ts, user_id, order_id, price) '
+                . 'VALUES(' . $ts . ', ' . $userId . ', ' . $orderId . ', ' . $price . ')');
+
+        if ($result === false) {
+            throw new Exception('При добавлении заказа в дайджест на хосте [' . $hostId . '] возникла ошибка: ' . mysqli_error($link));
+        }
+    } catch (Exception $Exception) {
+        $return = false;
+    }
+    
+    return $return;
 }
 
 /**
- * Удаляет заказ из ленты заказов
+ * Удаляет заказ из дайджеста
  * 
- * @todo сделать
+ * @param int $userId ID заказчика
+ * @param int $orderId ID заказа
+ * @param int $ts unix-время добавления заказа
  * 
- * @param int $userId
- * @param int $orderId
- * @param int $ts
- * 
- * @return bool
+ * @return bool удалось ли убрать заказ из дайджеста:
+ *              true - если в процессе удаления не было ошибок,
+ *              false - если в процессе удаления возникли ошибки и до выполнения удаления дело не дошло
  */
 function removeOrderFromDigest($userId, $orderId, $ts) {
-    return false;
+    $return = true;
+    try {
+        
+        $hostId = \Digest\findHostId($userId, $orderId, $ts);
+        $link = \Database\getConnectionOrFall($hostId);
+        
+        $result = mysqli_query(
+                $link, 
+                'DELETE FROM orders_digest '
+                . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND ts=' . $ts . ' '
+                . 'LIMIT 1');
+        
+        if ($result === false) {
+            throw new Exception('При удалении заказа из дайджеста на хосте [' . $hostId . '] возникла ошибка: ' . mysqli_error($link));
+        }
+    } catch (Exception $Exception) {
+        $return = false;
+    }
+    
+    return $return;
 }
 
 /**
@@ -132,6 +169,12 @@ function executeOrder($userId, $orderId) {
         // не удалось выполнить заказ - останавливаем задачу
         return -1;
     }
+    
+    if (!removeOrderFromDigest($userId, $orderId, $executeResult['ts'])) {
+        \DoLog\appendRemoveFromDigest($userId, $orderId, $executeResult['ts']);
+    }
+    
+    return $executeResult['balanceDelta'];
 }
 
 /**
@@ -216,7 +259,7 @@ function executeOrderSingleHost($hostId, $executeUserId, $userId, $orderId) {
  * Оформить выполнение заказа в ситуации, 
  * когда исполнитель и заказ находятся на разных хостах.
  * 
- * @param int $userHostId ID хоста с пользователем
+ * @param int $executeUserHostId ID хоста с пользователем
  * @param int $orderHostId ID хоста с заказом
  * @param int $executeUserId ID исполнителя
  * @param int $userId ID владельца заказа
@@ -228,7 +271,7 @@ function executeOrderSingleHost($hostId, $executeUserId, $userId, $orderId) {
  * 
  * @throws Exception при ошибках в работе с базой
  */
-function executeOrderMultiHost($userHostId, $orderHostId, $executeUserId, $userId, $orderId) {
+function executeOrderMultiHost($executeUserHostId, $orderHostId, $executeUserId, $userId, $orderId) {
     $orderLink = Database\getConnectionOrFall($orderHostId);
     if (!mysqli_begin_transaction($orderLink)) {
         throw new Exception('Невозможно начать транзакцию на хосте [' . $orderHostId . ']: ' . mysqli_error($orderLink));
@@ -266,22 +309,17 @@ function executeOrderMultiHost($userHostId, $orderHostId, $executeUserId, $userI
         return null;
     }
     
+    if (!mysqli_commit($orderLink)) {
+        mysqli_rollback($orderLink);
+        throw new Exception('Не удалось завершить транзакцию на хосте [' . $orderHostId . ']: ' . mysqli_error($orderLink));
+    }
+    
+    
     $balanceDelta = number_format($orderData['price'] * COMMISSION, 2, '.', '');
     if ($balanceDelta != '0.00') {
-        /*$userUpdateResult = mysqli_query($link, 'UPDATE users SET balance=balance + ' . $balanceDelta . ' WHERE id=' . $executeUserId . ' LIMIT 1');
-        if ($userUpdateResult === false) {
-            mysqli_rollback($link);
-            throw new Exception('Ошибка выполнения запроса на хосте [' . $hostId . ']: ' . mysqli_error($link));
-        } elseif (mysqli_affected_rows($link) == 0) {
-            // пользователя нет на хосте - не удалось обновить его баланс
-            mysqli_rollback($link);
-            return null;
-        }*/
-    } else {
-        // простая ситуация - пользователю не нужно обновлять баланс, т.к. бонус за баланс = 0
-        if (!mysqli_commit($orderLink)) {
-            mysqli_rollback($orderLink);
-            throw new Exception('Не удалось завершить транзакцию на хосте [' . $orderHostId . ']: ' . mysqli_error($orderLink));
+        // если нужно обновить баланс пользователя
+        if (!updateUserBalance($orderId, $userId, $balanceDelta)) {
+            \DoLog\appendUpdateUserBalance($userId, $balanceDelta);
         }
     }
     
@@ -289,4 +327,28 @@ function executeOrderMultiHost($userHostId, $orderHostId, $executeUserId, $userI
         'balanceDelta'  => $balanceDelta,
         'ts'            => $orderData['ts']
     ];
+}
+
+/**
+ * @param int $hostId ID хоста
+ * @param int $userId ID пользователя
+ * @param double $balanceDelta 
+ * 
+ * @return bool удалось ли обновить баланс пользователя
+ */
+function updateUserBalance($hostId, $userId, $balanceDelta) {
+    $return = true;
+    try {
+        $link = \Database\getConnectionOrFall($hostId);
+        $result = mysqli_query($link, 'UPDATE users SET balance= balance + ' . $balanceDelta . ' WHERE id=' . $userId . ' LIMIT 1');
+        if ($result === false) {
+            throw new Exception('При обновлении баланса на хосте [' . $hostId . '] возникал ошибка: ' . mysqli_error($link));
+        } elseif (mysqli_affected_rows($link) == 0) {
+            throw new Exception('Не удалось обновить баланс пользователя [' . $userId . '] на хосте [ ' . $hostId . ']: пользователь не найден');
+        }
+    } catch (Exception $Exception) {
+        $return = false;
+    }
+    
+    return $return;
 }
