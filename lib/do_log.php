@@ -87,8 +87,8 @@ function appendAddToDigest($userId, $orderId, $ts) {
 /**
  * Добавить в лог операций обновление баланса пользователя
  * 
- * @param int $userId
- * @param int $balanceDelta
+ * @param int $userId ID пользователя
+ * @param int $balanceDelta сумма, которую необходимо прибавить к балансу
  * 
  * @return bool удалось ли добавить запись в лог
  */

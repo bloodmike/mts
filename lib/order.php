@@ -6,6 +6,9 @@
  */
 namespace Order;
 
+use Exception;
+use mysqli;
+
 /**
  * Загружать все заказы пользователя
  */
@@ -152,7 +155,7 @@ function fetchHostInfo(\mysqli $link, $userId, $orderId) {
  * @throws Exception при ошибках в работе с базой
  */
 function loadListForUser($userId, $status = LOAD_USER_ORDERS_ALL, $maxOrderId = null, $limit = 50) {
-    if ($maxOrderId <= 1) {
+    if ($maxOrderId !== null && $maxOrderId <= 1) {
         // ID заказов начинаются с единицы, максимум = 1 - значит, более ранних заказов нет
         return [];
     }

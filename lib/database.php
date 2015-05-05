@@ -6,6 +6,8 @@
  */
 namespace Database;
 
+use Exception;
+
 /**
  * @staticvar mysqli[] $connectionLinksMap хранилище всех открытых подключений к базам
  * 

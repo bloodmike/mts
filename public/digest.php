@@ -8,7 +8,7 @@
 require_once('../lib/autoload.php');
 
 /**
- * @return array
+ * @return array загрузка дайджеста заказов и пользователей, которым принадлежат заказы
  */
 function loadDigest() {
     $response = [];
@@ -28,7 +28,8 @@ function loadDigest() {
         $response['users'] = \User\loadListByIds(array_keys($userIdsMap));
 
     } catch (Exception $Exception) {
-        $response['error'] = 'При обработке запроса возникла ошибка';
+		trigger_error($Exception->getMessage(), E_ERROR);
+        $response['error'] = \Error\PROCESSING_ERROR;
     }
 
     return $response;

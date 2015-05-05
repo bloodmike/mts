@@ -318,8 +318,8 @@ function executeOrderMultiHost($executeUserHostId, $orderHostId, $executeUserId,
     $balanceDelta = number_format($orderData['price'] * COMMISSION, 2, '.', '');
     if ($balanceDelta != '0.00') {
         // если нужно обновить баланс пользователя
-        if (!updateUserBalance($orderId, $userId, $balanceDelta)) {
-            \DoLog\appendUpdateUserBalance($userId, $balanceDelta);
+        if (!updateUserBalance($executeUserHostId, $executeUserId, $balanceDelta)) {
+            \DoLog\appendUpdateUserBalance($executeUserId, $balanceDelta);
         }
     }
     
@@ -330,23 +330,24 @@ function executeOrderMultiHost($executeUserHostId, $orderHostId, $executeUserId,
 }
 
 /**
- * @param int $hostId ID хоста
+ * @param int $userHostId ID хоста с данными пользователя
  * @param int $userId ID пользователя
- * @param double $balanceDelta 
+ * @param double $balanceDelta величина, на которую следует изменить баланс пользователя
  * 
  * @return bool удалось ли обновить баланс пользователя
  */
-function updateUserBalance($hostId, $userId, $balanceDelta) {
+function updateUserBalance($userHostId, $userId, $balanceDelta) {
     $return = true;
     try {
-        $link = \Database\getConnectionOrFall($hostId);
-        $result = mysqli_query($link, 'UPDATE users SET balance= balance + ' . $balanceDelta . ' WHERE id=' . $userId . ' LIMIT 1');
+		$userHostLink = \Database\getConnectionOrFall($userHostId);
+        $result = mysqli_query($userHostLink, 'UPDATE users SET balance= balance + ' . $balanceDelta . ' WHERE id=' . $userId . ' LIMIT 1');
         if ($result === false) {
-            throw new Exception('При обновлении баланса на хосте [' . $hostId . '] возникал ошибка: ' . mysqli_error($link));
-        } elseif (mysqli_affected_rows($link) == 0) {
+            throw new Exception('При обновлении баланса на хосте [' . $hostId . '] возникал ошибка: ' . mysqli_error($userHostLink));
+        } elseif (mysqli_affected_rows($userHostLink) == 0) {
             throw new Exception('Не удалось обновить баланс пользователя [' . $userId . '] на хосте [ ' . $hostId . ']: пользователь не найден');
         }
     } catch (Exception $Exception) {
+		trigger_error($Exception->getMessage());
         $return = false;
     }
     

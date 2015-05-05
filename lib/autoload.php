@@ -14,6 +14,7 @@ if ($environmentVersion === false) {
 }
 
 require_once(__DIR__ . '/../' . $environmentVersion . '.php');
+require_once(__DIR__ . '/error_codes.php');
 require_once(__DIR__ . '/database.php');
 require_once(__DIR__ . '/user.php');
 require_once(__DIR__ . '/order.php');

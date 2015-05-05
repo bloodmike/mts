@@ -6,6 +6,8 @@
  */
 namespace Digest;
 
+use Exception;
+
 /**
  * @param int $userId ID заказчика
  * @param int $orderId ID заказа
