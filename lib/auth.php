@@ -82,3 +82,11 @@ function authorize() {
 	
 	return $userData;
 }
+
+/**
+ * @param string $login
+ * @param string $password
+ */
+function logIn($login, $password) {
+	
+}

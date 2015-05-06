@@ -6,7 +6,7 @@ CREATE TABLE `users`(
     `login`		VARCHAR(25)		NOT NULL,
     `password`	VARCHAR(60)		NOT NULL,
     `balance`	DECIMAL(10,5)	NOT NULL UNSIGNED DEFAULT 0.00,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY(`id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
 --
@@ -17,7 +17,27 @@ CREATE TABLE `users_shards`(
     `to_user_id`    BIGINT  NOT NULL UNSIGNED, -- максимальный ID юзера (не включительно)
     `host_id`       INT     NOT NULL UNSIGNED, -- ID хоста
     `type`          TINYINT NOT NULL UNSIGNED, -- тип записи: 0 - по адресу лежат данные о расположении, 1 - данные о пользователях
-    PRIMARY KEY (`from_user_id`, `to_user_id`)
+    PRIMARY KEY(`from_user_id`, `to_user_id`)
+) ENGINE=innoDB DEFAULT CHARSET=utf8;
+
+--
+-- Таблица с распределением логинов пользователей по хостам (нужна для поиска по логину)
+--
+CREATE TABLE `users_logins_shards`(
+	`from_login`	VARCHAR(25) NOT NULL,
+	`to_login`		VARCHAR(25) NOT NULL,
+	`host_id`		INT			NOT NULL UNSIGNED, -- ID хоста
+	`type`			TINYINT		NOT NULL UNSIGNED, -- тип записи: 0 - по адресу лежат данные о расположении, 1 - данные 0 пользователях
+	PRIMARY KEY(`from_login`, `to_login`)
+) ENGINE=innoDB DEFAULT CHARSET=utf8;
+
+--
+-- Таблица с логинами пользователей (нужна для поиска по логину)
+--
+CREATE TABLE `users_logins`(
+	`login`	VARCHAR(25) NOT NULL,
+	`id`	BIGINT NOT NULL UNSIGNED,
+	PRIMARY KEY(`login`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
 --

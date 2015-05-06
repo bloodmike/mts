@@ -15,6 +15,11 @@ use mysqli;
 const MAX_LOAD_BY_ID_ITERATIONS_COUNT = 15;
 
 /**
+ * Максимально допустимое количество итераций при поиске шарды с пользователем
+ */
+const MAX_LOAD_BY_LOGIN_ITERATIONS_COUNT = 10;
+
+/**
  * Тип записи в шарде: данные о расположении пользователей
  */
 const SHARD_RECORD_TYPE_SHARD = 0;
@@ -236,4 +241,58 @@ function loadListByIds($userIds) {
     }
     
     return $users;
+}
+
+/**
+ * @global int $rootDatabaseHostId ID хоста, к которому обращаться за данными по умолчанию
+ * 
+ * @param string $login логин пользователя
+ * 
+ * @throws Exception если возникла ошибка при выполнении запроса, запросы пошли по кругу или их количество превысило предел
+ * 
+ * @return int ID пользователя с указанным логином (0 - пользователь не найден)
+ */
+function findUserIdByLogin($login) {
+	global $rootDatabaseHostId;
+	
+	$loops = 0;
+	$hostId = $rootDatabaseHostId;
+    $visitedHostsMap = [];
+	
+	do {
+        if ($loops >= MAX_LOAD_BY_LOGIN_ITERATIONS_COUNT) {
+            throw new Exception('Превышено допустимое количество итерации при поиске шард пользователей');
+        }
+        $loops++;
+        
+        if (array_key_exists($hostId, $visitedHostsMap)) {
+            throw new Exception('При поиске шарды с логином пользователя [' . $login . '] возникла ошибка цикличности');
+        }
+		
+		$link = \Database\getConnectionOrFall($hostId);
+		$escapedLogin = mysqli_real_escape_string($link, $login);
+		
+		$hostInfo = \Database\fetchRow(
+				$link, 
+				"SELECT host_id, type "
+				. "FROM users_logins_shards "
+				. "WHERE from_login <= '" . $escapedLogin . "' AND '" . $escapedLogin . "' < to_login "
+				. "LIMIT 1");
+		
+		if ($hostInfo === null) {
+			return 0;
+		}
+        
+        $visitedHostsMap[$hostId] = true;
+        $hostId = $hostInfo['host_id'];
+		
+	} while ($hostInfo['type'] == SHARD_RECORD_TYPE_SHARD);
+	
+	$link = \Database\getConnectionOrFall($hostId);
+	return (int)\Database\fetchOne(
+			$link, 
+			"SELECT id "
+			. "FROM users_logins "
+			. "WHERE login='" . mysqli_real_escape_string($link, $login) . "' "
+			. "LIMIT 1");
 }
