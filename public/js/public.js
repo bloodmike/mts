@@ -12,12 +12,32 @@
  * @returns {string} текст ошибки или строка с кодом ошибки (если текст не найден)
  */
 function code2error(code) {
-    var CONSTANTS = CONSTANTS || {};
+    CONSTANTS = CONSTANTS || {};
+	
     if (!CONSTANTS.hasOwnProperty(code)) {
         console.log('Код [%s] не найден', code);
         return code.toString();
     }
     return CONSTANTS[code];
+}
+
+/**
+ * 
+ * @param {type} object
+ * @param {type} prefix
+ * @returns {String}
+ */
+function objectToString(object, prefix) {
+	var str = [];
+	for(var i in object) {
+		if (object.hasOwnProperty(i)) {
+			var key = prefix ? prefix + "[" + i + "]" : i;
+			var value = object[i];
+			var part = typeof value === "object" ? objectToString(value, key) : encodeURIComponent(key) + "=" + encodeURIComponent(value);
+			str.push(part);
+		}
+	}
+	return str.join("&");
 }
 
 /**
@@ -37,16 +57,59 @@ function ajaxJson(method, url, parameters, callback, callbackFail) {
     
     var xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
-    
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
-            if (xhr.status === 200 || callbackFail === null) {
-                callback(xhr.responseText);
-            } else {
+			var json = JSON.parse(xhr.responseText);
+            if (xhr.status === 200 && typeof json == 'object') {
+                callback(json);
+            } else if (callbackFail !== null) {
                 callbackFail(xhr);
-            }
+            } else {
+				console.log(xhr);
+			}
         }
     };
-    xhr.send(null);
+    xhr.send(objectToString(parameters));
     return xhr;
+}
+
+/**
+ * Удаляет у переданного элемента css-класс
+ * 
+ * @param {Element|null} element элемент
+ * @param {string} className имя класса, которое требуется удалить
+ * 
+ * @returns {Element|null} переданный элемент
+ */
+function elementRemoveClass(element, className) {
+	if (element !== null) {
+		var classNames = element.className.split(' ');
+		var newClassNames = [];
+		
+		for (var i in classNames) {
+			if (className !== classNames[i]) {
+				newClassNames.push(classNames[i]);
+			}
+		}
+		element.className = newClassNames.join(' ');
+	}
+	
+	return element;
+}
+
+/**
+ * Добавляет переданному элементу css-класс
+ * 
+ * @param {Element|null} element элемент
+ * @param {string} className имя класса, которое требуется добавить
+ * 
+ * @returns {Element|null} переданный элемент
+ */
+function elementAddClass(element, className) {
+	if (element !== null) {
+		element.className += ' ' + className;
+	}
+	
+	return element;
 }

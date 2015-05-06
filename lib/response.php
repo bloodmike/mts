@@ -34,3 +34,14 @@ function jsonAddError(array &$response, $code) {
 function jsonHasErrors(array &$response) {
     return array_key_exists('error', $response) && count($response['error']) > 0;
 }
+
+/**
+ * Завершает работу скрипта выставлением заголовков для редиректа пользователя.
+ * 
+ * @param string $url ссылка, куда будет отправлен пользователь
+ */
+function redirect($url) {
+	header('HTTP/1.1 301 Moved Permanently');
+	header('Location: ' . $url);
+	exit;
+}

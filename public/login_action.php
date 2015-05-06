@@ -50,11 +50,11 @@ function logIn() {
         \Auth\setUser($userId, $userData['password']);
         
     } catch (Exception $Exception) {
-        trigger_error($Exception->getMessage(), E_USER_ERROR);
+        error_log($Exception->getMessage());
         \Response\jsonAddError($response, \Error\PROCESSING_ERROR);
     }
     
     return $response;
 }
 
-echo json_response(logIn());
+echo json_encode(logIn());

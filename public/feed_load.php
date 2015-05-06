@@ -28,11 +28,11 @@ function loadDigest() {
         $response['users'] = \User\loadListByIds(array_keys($userIdsMap));
 
     } catch (Exception $Exception) {
-		trigger_error($Exception->getMessage(), E_USER_ERROR);
+		error_log($Exception->getMessage());
         \Response\jsonAddError($response, \Error\PROCESSING_ERROR);
     }
 
     return $response;
 }
 
-echo json_response(loadDigest(), JSON_UNESCAPED_UNICODE);
+echo json_encode(loadDigest(), JSON_UNESCAPED_UNICODE);

@@ -2,10 +2,10 @@
 -- Таблица с пользователями
 --
 CREATE TABLE `users`(
-    `id`		BIGINT			NOT NULL UNSIGNED,
+    `id`		BIGINT			UNSIGNED NOT NULL,
     `login`		VARCHAR(25)		NOT NULL,
     `password`	VARCHAR(60)		NOT NULL,
-    `balance`	DECIMAL(10,5)	NOT NULL UNSIGNED DEFAULT 0.00,
+    `balance`	DECIMAL(10,5)	UNSIGNED NOT NULL DEFAULT 0.00,
     PRIMARY KEY(`id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
@@ -13,10 +13,10 @@ CREATE TABLE `users`(
 -- Таблица с информацией о расположении данных пользователей
 --
 CREATE TABLE `users_shards`(
-    `from_user_id`  BIGINT  NOT NULL UNSIGNED, -- минимальный ID юзера (включительно)
-    `to_user_id`    BIGINT  NOT NULL UNSIGNED, -- максимальный ID юзера (не включительно)
-    `host_id`       INT     NOT NULL UNSIGNED, -- ID хоста
-    `type`          TINYINT NOT NULL UNSIGNED, -- тип записи: 0 - по адресу лежат данные о расположении, 1 - данные о пользователях
+    `from_user_id`  BIGINT  UNSIGNED NOT NULL, -- минимальный ID юзера (включительно)
+    `to_user_id`    BIGINT  UNSIGNED NOT NULL, -- максимальный ID юзера (не включительно)
+    `host_id`       INT     UNSIGNED NOT NULL, -- ID хоста
+    `type`          TINYINT UNSIGNED NOT NULL, -- тип записи: 0 - по адресу лежат данные о расположении, 1 - данные о пользователях
     PRIMARY KEY(`from_user_id`, `to_user_id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
@@ -26,8 +26,8 @@ CREATE TABLE `users_shards`(
 CREATE TABLE `users_logins_shards`(
 	`from_login`	VARCHAR(25) NOT NULL,
 	`to_login`		VARCHAR(25) NOT NULL,
-	`host_id`		INT			NOT NULL UNSIGNED, -- ID хоста
-	`type`			TINYINT		NOT NULL UNSIGNED, -- тип записи: 0 - по адресу лежат данные о расположении, 1 - данные 0 пользователях
+	`host_id`		INT		    UNSIGNED NOT NULL, -- ID хоста
+	`type`			TINYINT		UNSIGNED NOT NULL, -- тип записи: 0 - по адресу лежат данные о расположении, 1 - данные 0 пользователях
 	PRIMARY KEY(`from_login`, `to_login`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
@@ -36,7 +36,7 @@ CREATE TABLE `users_logins_shards`(
 --
 CREATE TABLE `users_logins`(
 	`login`	VARCHAR(25) NOT NULL,
-	`id`	BIGINT NOT NULL UNSIGNED,
+	`id`	BIGINT		UNSIGNED NOT NULL,
 	PRIMARY KEY(`login`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
@@ -45,9 +45,9 @@ CREATE TABLE `users_logins`(
 -- Данные по расположению лент пользователей лежат на одних хостах с данными пользователей.
 --
 CREATE TABLE `users_orders_shards`(
-    `user_id`       BIGINT  NOT NULL UNSIGNED, -- ID юзера
-    `from_order_id` BIGINT  NOT NULL UNSIGNED, -- минимальный ID заказа (включительно)
-    `host_id`       INT     NOT NULL UNSIGNED, -- ID хоста, где лежат данные заказов
+    `user_id`       BIGINT  UNSIGNED NOT NULL, -- ID юзера
+    `from_order_id` BIGINT  UNSIGNED NOT NULL, -- минимальный ID заказа (включительно)
+    `host_id`       INT     UNSIGNED NOT NULL, -- ID хоста, где лежат данные заказов
     PRIMARY KEY(`user_id`, `from_order_id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
@@ -55,12 +55,12 @@ CREATE TABLE `users_orders_shards`(
 -- Таблица с заказами пользователей
 --
 CREATE TABLE `users_orders`(
-    `user_id`           BIGINT          NOT NULL UNSIGNED, -- ID заказчика
-    `order_id`          BIGINT          NOT NULL UNSIGNED, -- ID заказа
-    `ts`                BIGINT          NOT NULL UNSIGNED, -- unix-время добавления заказа
-    `price`             DECIMAL(10,2)   NOT NULL UNSIGNED DEFAULT '0.00', -- сумма заказа
-    `finished`          TINYINT         NOT NULL UNSIGNED DEFAULT '0', -- выполнен ли заказ
-    `finished_user_id`  BIGINT          NOT NULL UNSIGNED, -- ID исполнителя заказа
+    `user_id`           BIGINT          UNSIGNED NOT NULL, -- ID заказчика
+    `order_id`          BIGINT          UNSIGNED NOT NULL, -- ID заказа
+    `ts`                BIGINT          UNSIGNED NOT NULL, -- unix-время добавления заказа
+    `price`             DECIMAL(10,2)   UNSIGNED NOT NULL DEFAULT '0.00', -- сумма заказа
+    `finished`          TINYINT         UNSIGNED NOT NULL DEFAULT '0', -- выполнен ли заказ
+    `finished_user_id`  BIGINT          UNSIGNED NOT NULL, -- ID исполнителя заказа
     PRIMARY KEY(`user_id`, `order_id`),
     KEY(`user_id`, `finished`, `order_id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
@@ -70,10 +70,10 @@ CREATE TABLE `users_orders`(
 -- В дайджестом содержатся только невыполненные заказы.
 --
 CREATE TABLE `orders_digest`(
-    `ts`        BIGINT          NOT NULL UNSIGNED, -- unix-время добавления заказа
-    `user_id`   BIGINT          NOT NULL UNSIGNED, -- ID заказчика
-    `order_id`  BIGINT          NOT NULL UNSIGNED, -- ID заказа
-    `price`     DECIMAL(10,2)   NOT NULL UNSIGNED DEFAULT '0.00', -- сумма заказа
+    `ts`        BIGINT          UNSIGNED NOT NULL, -- unix-время добавления заказа
+    `user_id`   BIGINT          UNSIGNED NOT NULL, -- ID заказчика
+    `order_id`  BIGINT          UNSIGNED NOT NULL, -- ID заказа
+    `price`     DECIMAL(10,2)   UNSIGNED NOT NULL DEFAULT '0.00', -- сумма заказа
     PRIMARY KEY(`ts`, `user_id`, `order_id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
@@ -81,11 +81,11 @@ CREATE TABLE `orders_digest`(
 -- Таблица с данными о шардах даджеста.
 --
 CREATE TABLE `orders_digest_shards`(
-    `from_ts`   BIGINT NOT NULL UNSIGNED, -- минимальное unix-время заявки (включительно)
-    `to_ts`     BIGINT NOT NULL UNSIGNED, -- максимальное unix-время заявки (не включительно)
+    `from_ts`   BIGINT UNSIGNED NOT NULL, -- минимальное unix-время заявки (включительно)
+    `to_ts`     BIGINT UNSIGNED NOT NULL, -- максимальное unix-время заявки (не включительно)
     `from_hash` VARCHAR(32) NOT NULL DEFAULT '',
     `to_hash`   VARCHAR(32) NOT NULL DEFAULT '',
-    `host_id`   INT     NOT NULL UNSIGNED, -- ID хоста
+    `host_id`   INT     UNSIGNED NOT NULL, -- ID хоста
     PRIMARY KEY(`from_ts`, `to_ts`, `from_hash`, `to_hash`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
@@ -94,8 +94,8 @@ CREATE TABLE `orders_digest_shards`(
 -- Данные по расположению выполненных заказов лежат на одних хостах с данными пользователей.
 --
 CREATE TABLE `finished_orders_shards`(
-    `finished_user_id`  BIGINT NOT NULL UNSIGNED, -- ID пользователя, выполнившего заказ
-    `from_finish_ts`    BIGINT NOT NULL UNSIGNED, -- минимальное время выполнения заказа (включительно)
+    `finished_user_id`  BIGINT UNSIGNED NOT NULL, -- ID пользователя, выполнившего заказ
+    `from_finish_ts`    BIGINT UNSIGNED NOT NULL, -- минимальное время выполнения заказа (включительно)
     PRIMARY KEY(`finished_user_id`, `from_finish_ts`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
@@ -103,9 +103,9 @@ CREATE TABLE `finished_orders_shards`(
 -- Таблица с данными по выполненным заказам
 --
 CREATE TABLE `finished_orders`(
-    `finished_user_id`  BIGINT NOT NULL UNSIGNED, -- ID исполнителя
-    `finish_ts`         BIGINT NOT NULL UNSIGNED, -- unix-время исполнения заказа
-    `user_id`           BIGINT NOT NULL UNSIGNED, -- ID заказчика
-    `order_id`          BIGINT NOT NULL UNSIGNED, -- ID заказа
+    `finished_user_id`  BIGINT UNSIGNED NOT NULL, -- ID исполнителя
+    `finish_ts`         BIGINT UNSIGNED NOT NULL, -- unix-время исполнения заказа
+    `user_id`           BIGINT UNSIGNED NOT NULL, -- ID заказчика
+    `order_id`          BIGINT UNSIGNED NOT NULL, -- ID заказа
     PRIMARY KEY(`finished_user_id`, `finish_ts`, `user_id`, `order_id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;

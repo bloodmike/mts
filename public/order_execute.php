@@ -45,7 +45,7 @@ function executeOrder() {
 			$response['balanceDelta'] = $balanceDelta;
 		}
     } catch (Exception $Exception) {
-		trigger_error($Exception->getMessage(), E_USER_ERROR);
+		error_log($Exception->getMessage());
         \Response\jsonAddError($response, \Error\PROCESSING_ERROR);
     }
     

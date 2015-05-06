@@ -32,7 +32,7 @@ function addOrder() {
         $response['order'] = \Action\createOrder($price);
         
     } catch (Exception $Exception) {
-        trigger_error($Exception->getMessage(), E_USER_ERROR);
+        error_log($Exception->getMessage());
         \Response\jsonAddError($response, \Error\PROCESSING_ERROR);
     }
 }

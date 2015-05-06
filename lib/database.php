@@ -7,6 +7,7 @@
 namespace Database;
 
 use Exception;
+use mysqli;
 
 /**
  * @staticvar mysqli[] $connectionLinksMap хранилище всех открытых подключений к базам
@@ -27,7 +28,7 @@ function getConnection($hostId) {
     $connectionLinksMap =& getConnections();
     
     if (!array_key_exists($hostId, $connectionLinksMap)) {
-        $connectionLinksMap[$hostId] = mysqli_connect(getHostName($hostId), 'root', '123', 'mts', getHostPort($hostId));
+        $connectionLinksMap[$hostId] = mysqli_connect(getHostName($hostId), 'mts', '123', 'mts', getHostPort($hostId));
     }
     
     return $connectionLinksMap[$hostId];

@@ -133,7 +133,7 @@ function removeOrderFromDigest($userId, $orderId, $ts) {
             throw new Exception('При удалении заказа из дайджеста на хосте [' . $hostId . '] возникла ошибка: ' . mysqli_error($link));
         }
     } catch (Exception $Exception) {
-        trigger_error($Exception->getMessage(), E_USER_ERROR);
+        error_log($Exception->getMessage());
         $return = false;
     }
     
@@ -346,7 +346,7 @@ function updateUserBalance($userHostId, $userId, $balanceDelta) {
             throw new Exception('Не удалось обновить баланс пользователя [' . $userId . '] на хосте [ ' . $userHostId . ']: пользователь не найден');
         }
     } catch (Exception $Exception) {
-		trigger_error($Exception->getMessage(), E_USER_ERROR);
+		error_log($Exception->getMessage());
         $return = false;
     }
     
@@ -361,13 +361,11 @@ function checkUserAuthorized() {
     try {
         $authorized = (\Auth\authorize() !== null);
     } catch (Exception $Exception) {
-        trigger_error($Exception->getMessage(), E_USER_ERROR);
+        error_log($Exception->getMessage());
         $authorized = false;
     }
     
     if (!$authorized) {
-        header('HTTP/1.1 301 Moved Permanently');
-        header('Location: /login.php');
-        exit;
+        \Response\redirect('/login.php');
     }
 }
