@@ -14,6 +14,10 @@ function executeOrder() {
     $response = [];
 
     try {
+        if (filter_input(INPUT_SERVER, 'REQUEST_METHOD') != 'POST') {
+            throw new Exception('Неправильный метод запроса');
+        }
+        
         $userId = filter_input(INPUT_POST, 'user_id', FILTER_SANITIZE_NUMBER_INT);
         $orderId = filter_input(INPUT_POST, 'order_id', FILTER_SANITIZE_NUMBER_INT);
         

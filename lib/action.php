@@ -70,8 +70,6 @@ function createOrder($price) {
         throw new Exception('Не удалось завершить транзакцию [' . $userId . ', ' . $orderId . ']');
     }
     
-    
-    
     return $orderId;
 }
 
@@ -343,9 +341,9 @@ function updateUserBalance($userHostId, $userId, $balanceDelta) {
 		$userHostLink = \Database\getConnectionOrFall($userHostId);
         $result = mysqli_query($userHostLink, 'UPDATE users SET balance= balance + ' . $balanceDelta . ' WHERE id=' . $userId . ' LIMIT 1');
         if ($result === false) {
-            throw new Exception('При обновлении баланса на хосте [' . $hostId . '] возникал ошибка: ' . mysqli_error($userHostLink));
+            throw new Exception('При обновлении баланса на хосте [' . $userHostId . '] возникал ошибка: ' . mysqli_error($userHostLink));
         } elseif (mysqli_affected_rows($userHostLink) == 0) {
-            throw new Exception('Не удалось обновить баланс пользователя [' . $userId . '] на хосте [ ' . $hostId . ']: пользователь не найден');
+            throw new Exception('Не удалось обновить баланс пользователя [' . $userId . '] на хосте [ ' . $userHostId . ']: пользователь не найден');
         }
     } catch (Exception $Exception) {
 		trigger_error($Exception->getMessage(), E_USER_ERROR);
@@ -353,4 +351,23 @@ function updateUserBalance($userHostId, $userId, $balanceDelta) {
     }
     
     return $return;
+}
+
+/**
+ * Проверяет, авторизован ли пользователь.
+ * Если нет - возвращает редирект пользователю на страницу авторизации.
+ */
+function checkUserAuthorized() {
+    try {
+        $authorized = (\Auth\authorize() !== null);
+    } catch (Exception $Exception) {
+        trigger_error($Exception->getMessage(), E_USER_ERROR);
+        $authorized = false;
+    }
+    
+    if (!$authorized) {
+        header('HTTP/1.1 301 Moved Permanently');
+        header('Location: /login.php');
+        exit;
+    }
 }

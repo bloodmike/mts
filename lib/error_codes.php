@@ -51,3 +51,8 @@ const AUTH_INCORRECT_PASSWORD = 8;
  * Пользователь не найден
  */
 const USER_NOT_FOUND = 9;
+
+/**
+ * Неправильная сумма заказа
+ */
+const INCORRECT_ORDER_PRICE = 10;

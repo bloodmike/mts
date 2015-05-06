@@ -26,4 +26,6 @@ function htmlContent() {
     <?
 }
 
+$pageTitle = 'Добро пожаловать!';
+
 require_once('../templates/html.php');

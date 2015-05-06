@@ -88,3 +88,24 @@ CREATE TABLE `orders_digest_shards`(
     `host_id`   INT     NOT NULL UNSIGNED, -- ID хоста
     PRIMARY KEY(`from_ts`, `to_ts`, `from_hash`, `to_hash`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
+
+--
+-- Информация о шардах выполненных пользователем заказов.
+-- Данные по расположению выполненных заказов лежат на одних хостах с данными пользователей.
+--
+CREATE TABLE `finished_orders_shards`(
+    `finished_user_id`  BIGINT NOT NULL UNSIGNED, -- ID пользователя, выполнившего заказ
+    `from_finish_ts`    BIGINT NOT NULL UNSIGNED, -- минимальное время выполнения заказа (включительно)
+    PRIMARY KEY(`finished_user_id`, `from_finish_ts`)
+) ENGINE=innoDB DEFAULT CHARSET=utf8;
+
+--
+-- Таблица с данными по выполненным заказам
+--
+CREATE TABLE `finished_orders`(
+    `finished_user_id`  BIGINT NOT NULL UNSIGNED, -- ID исполнителя
+    `finish_ts`         BIGINT NOT NULL UNSIGNED, -- unix-время исполнения заказа
+    `user_id`           BIGINT NOT NULL UNSIGNED, -- ID заказчика
+    `order_id`          BIGINT NOT NULL UNSIGNED, -- ID заказа
+    PRIMARY KEY(`finished_user_id`, `finish_ts`, `user_id`, `order_id`)
+) ENGINE=innoDB DEFAULT CHARSET=utf8;

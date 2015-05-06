@@ -19,6 +19,12 @@ const USER_ID_SESSION_KEY = 'uid';
 const PASSWORD_HASH_SESSION_KEY = 'pass';
 
 /**
+ * @var array|null переменная, в которой лежат данные авторизованного пользователя;
+ *                  заполняется данными при вызове \Auth\authorize()
+ */
+$currentUser = null;
+
+/**
  * Проверяет, что сессия начата;
  * если не начата - начинает её.
  */
@@ -57,11 +63,15 @@ function logOut() {
 /**
  * Проверяет данные авторизации в сессии.
  * 
+ * @global array|null $currentUser переменная для хранения данных текущего пользователя
+ * 
  * @return array|null данные пользователя или null, если данные авторизации некорректны
  * 
  * @throws Exception при ошибках в работе с базой
  */
-function authorize() {
+function authorize() {    
+    global $currentUser;
+    
 	$userId = getCurrentUserId();
 	if ($userId <= 0 || !array_key_exists(PASSWORD_HASH_SESSION_KEY, $_SESSION) || strlen($_SESSION[PASSWORD_HASH_SESSION_KEY]) != 60) {
 		logOut();
@@ -80,6 +90,7 @@ function authorize() {
 		return null;
 	}
 	
+    $currentUser = $userData;
 	return $userData;
 }
 
