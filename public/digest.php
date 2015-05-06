@@ -28,8 +28,8 @@ function loadDigest() {
         $response['users'] = \User\loadListByIds(array_keys($userIdsMap));
 
     } catch (Exception $Exception) {
-		trigger_error($Exception->getMessage(), E_ERROR);
-        $response['error'] = \Error\PROCESSING_ERROR;
+		trigger_error($Exception->getMessage(), E_USER_ERROR);
+        \Response\jsonAddError($response, \Error\PROCESSING_ERROR);
     }
 
     return $response;

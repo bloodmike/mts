@@ -135,6 +135,7 @@ function removeOrderFromDigest($userId, $orderId, $ts) {
             throw new Exception('При удалении заказа из дайджеста на хосте [' . $hostId . '] возникла ошибка: ' . mysqli_error($link));
         }
     } catch (Exception $Exception) {
+        trigger_error($Exception->getMessage(), E_USER_ERROR);
         $return = false;
     }
     
@@ -347,7 +348,7 @@ function updateUserBalance($userHostId, $userId, $balanceDelta) {
             throw new Exception('Не удалось обновить баланс пользователя [' . $userId . '] на хосте [ ' . $hostId . ']: пользователь не найден');
         }
     } catch (Exception $Exception) {
-		trigger_error($Exception->getMessage());
+		trigger_error($Exception->getMessage(), E_USER_ERROR);
         $return = false;
     }
     

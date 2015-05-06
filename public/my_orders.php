@@ -15,8 +15,7 @@ function loadOrders() {
 	$response = [];
 	try {
 		if (\Auth\authorize() === null) {
-			$response['error'] = \Error\USER_NOT_AUTHORIZED;
-			return $response;
+            return \Response\jsonAddError($response, \Error\USER_NOT_AUTHORIZED);
 		}
 		
 		$status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_NUMBER_INT);
@@ -31,8 +30,8 @@ function loadOrders() {
 		
 		$response['orders'] = \Order\loadListForUser(\Auth\getCurrentUserId(), $status, $maxOrderId);
 	} catch (Exception $Exception) {
-		trigger_error($Exception->getMessage(), E_ERROR);
-		$response['error'] = \Error\PROCESSING_ERROR;
+		trigger_error($Exception->getMessage(), E_USER_ERROR);
+        \Response\jsonAddError($response, \Error\PROCESSING_ERROR);
 	}
 	return $response;
 }

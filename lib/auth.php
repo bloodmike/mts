@@ -84,9 +84,13 @@ function authorize() {
 }
 
 /**
- * @param string $login
- * @param string $password
+ * Сохраняет переданного пользователя в сессию в качестве авторизованного.
+ * 
+ * @param int $userId ID пользователя
+ * @param string $passwordHash хэш пароля
  */
-function logIn($login, $password) {
-	
+function setUser($userId, $passwordHash) {
+	checkSessionStarted();
+    $_SESSION[USER_ID_SESSION_KEY] = $userId;
+    $_SESSION[PASSWORD_HASH_SESSION_KEY] = $passwordHash;
 }

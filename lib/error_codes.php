@@ -31,3 +31,23 @@ const ORDER_ALREADY_EXECUTED = 4;
  * Нельзя выполнить собственный заказ
  */
 const CANNT_EXECUTE_OWN_ORDER = 5;
+
+/**
+ * Неправильно указан логин
+ */
+const AUTH_BAD_LOGIN = 6;
+
+/**
+ * Не указан пароль
+ */
+const AUTH_NO_PASSWORD = 7;
+
+/**
+ * Неправильно указан пароль
+ */
+const AUTH_INCORRECT_PASSWORD = 8;
+
+/**
+ * Пользователь не найден
+ */
+const USER_NOT_FOUND = 9;
