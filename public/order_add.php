@@ -7,6 +7,9 @@
 
 require_once('../lib/autoload.php');
 
+ignore_user_abort(true);
+set_time_limit(60);
+
 /**
  * @return array результат обработки запроса на добавление заказа
  */
