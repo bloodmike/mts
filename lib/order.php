@@ -219,3 +219,51 @@ function loadListForUser($userId, $status = LOAD_USER_ORDERS_ALL, $maxOrderId = 
     
     return $orders;
 }
+
+/**
+ * @todo протестировать
+ * 
+ * @param int $userId ID исполнителя
+ * @param int $maxFinishTs ограничение по времени выполнения сверху (не включительно)
+ * @param int $limit ограничение длины списка
+ * 
+ * @return array список выполненных пользователем заказов указанной длины
+ * 
+ * @throws Exception 
+ */
+function loadFinishedListForUser($userId, $maxFinishTs, $limit = 50) {
+    $userHostId = \User\findHostId($userId);
+    $userHostLink = \Database\getConnectionOrFall($userHostId);
+    
+    $orders = [];
+    
+    do {
+        $finishedHostInfo = \Database\fetchRow(
+                $userHostLink, 
+                'SELECT host_id, from_finished_ts '
+                . 'FROM finished_orders_shards '
+                . 'WHERE finished_user_id=' . $userId . ' AND from_finished_ts < ' . $maxFinishTs . ' '
+                . 'ORDER BY from_finished_ts ASC '
+                . 'LIMIT 1');
+        
+        if ($finishedHostInfo === null) {
+            break;
+        }
+        
+        $finishedLink = \Database\getConnectionOrFall($finishedHostInfo['host_id']);
+        $ordersPack = \Database\fetchAll(
+                $finishedLink,
+                'SELECT finished_ts, user_id, order_id, income '
+                . 'FROM finished_orders '
+                . 'WHERE finished_user_id=' . $userId . ' AND finished_ts < ' . $maxFinishTs . ' '
+                . 'ORDER BY finished_ts DESC '
+                . 'LIMIT ' . ($limit - count($orders)));
+        
+        if (count($ordersPack) > 0) {
+            $orders = array_merge($orders, $ordersPack);
+            $maxFinishTs = end($ordersPack)['finished_ts'];
+        } else {
+            $maxFinishTs = $finishedHostInfo['from_finished_ts'];
+        }
+    } while (count($orders) < $limit);
+}

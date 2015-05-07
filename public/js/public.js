@@ -22,14 +22,16 @@ function code2error(code) {
 }
 
 /**
+ * Сериализует переданный объект в строку
  * 
- * @param {type} object
- * @param {type} prefix
- * @returns {String}
+ * @param {Object} object сериализуемый объект
+ * @param {string} [prefix] префикс для подстановки к полю при сериализации
+ * 
+ * @returns {string} строка с параметрами вида: a=b&c=d&e[0]=f&...
  */
 function objectToString(object, prefix) {
 	var str = [];
-	for(var i in object) {
+	for (var i in object) {
 		if (object.hasOwnProperty(i)) {
 			var key = prefix ? prefix + "[" + i + "]" : i;
 			var value = object[i];

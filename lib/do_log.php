@@ -28,6 +28,11 @@ const ADD_ORDER_TO_DIGEST = 2;
 const UPDATE_USER_BALANCE = 3;
 
 /**
+ * Добавить заказ в список успешно выполненных
+ */
+const ADD_ORDER_TO_FINISHED = 4;
+
+/**
  * Вносит запись о действии в лог.
  * 
  * @param int $actionCode код действия
@@ -94,4 +99,19 @@ function appendAddToDigest($userId, $orderId, $ts) {
  */
 function appendUpdateUserBalance($userId, $balanceDelta) {
     return writeRecord(UPDATE_USER_BALANCE, [$userId, $balanceDelta]);
+}
+
+/**
+ * Добавить в лог операций внесение заказа в список завершенных заказов пользователя
+ * 
+ * @param int $finishUserId ID исполнителя
+ * @param int $finishTs unix-время выполнения заказа
+ * @param string $balanceDelta прибыль исполнителя
+ * @param int $userId ID заказчика
+ * @param int $orderId ID заказа
+ * 
+ * @return bool удалось ли внести запись в лог
+ */
+function appendAddToFinished($finishUserId, $finishTs, $balanceDelta, $userId, $orderId) {
+    return writeRecord(ADD_ORDER_TO_DIGEST, [$finishUserId, $finishTs, $balanceDelta, $userId, $orderId]);
 }

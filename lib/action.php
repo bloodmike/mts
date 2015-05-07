@@ -156,7 +156,7 @@ function executeOrder($userId, $orderId) {
     
     // Получить хост текущего пользователя
     $currentUserId = \Auth\getCurrentUserId();
-    $userHostId = \User\loadById($currentUserId);
+    $userHostId = \User\findHostId($currentUserId);
     
     if ($orderHostId == $userHostId) {
         $executeResult = executeOrderSingleHost($orderHostId, $currentUserId, $userId, $orderId);
@@ -173,6 +173,10 @@ function executeOrder($userId, $orderId) {
         \DoLog\appendRemoveFromDigest($userId, $orderId, $executeResult['ts']);
     }
     
+    if (!addOrderToFinished($userHostId, $currentUserId, $executeResult['finishTs'], $executeResult['balanceDelta'], $userId, $orderId)) {
+        \DoLog\appendAddToFinished($currentUserId, $executeResult['finishTs'], $executeResult['balanceDelta'], $userId, $orderId);
+    }
+    
     return $executeResult['balanceDelta'];
 }
 
@@ -187,7 +191,8 @@ function executeOrder($userId, $orderId) {
  * 
  * @return array|null данные выполненного заказа (null - если заказ не найден или уже выполнен):
  *                      balanceDelta - изменение баланса исполнителя,
- *                      ts - unix-время создания заказа (для быстрого его поиска по дайджесту)
+ *                      ts - unix-время создания заказа (для быстрого его поиска по дайджесту),
+ *                      finishTs - unix-время выполнения заказа (для добавления в ленту выполненных заказов)
  * 
  * @throws Exception при ошибках в работе с базой
  */
@@ -201,7 +206,7 @@ function executeOrderSingleHost($hostId, $executeUserId, $userId, $orderId) {
             $link, 
             'SELECT ts, price '
             . 'FROM users_orders '
-            . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND status=0 '
+            . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND finished=0 '
             . 'LIMIT 1');
     
     if ($orderResult === false) {
@@ -215,10 +220,12 @@ function executeOrderSingleHost($hostId, $executeUserId, $userId, $orderId) {
     $orderData = mysqli_fetch_assoc($orderResult);
     mysqli_free_result($orderData);
     
+    $finishTs = time();
+    
     $orderUpdateResult = mysqli_query($link, 
             'UPDATE users_orders '
-            . 'SET status=1, status_user_id=' . $executeUserId . ' '
-            . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND status=0 '
+            . 'SET finished=1, finished_user_id=' . $executeUserId . ', finished_ts=' . $finishTs . ' '
+            . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND finished=0 '
             . 'LIMIT 1');
     
     if ($orderUpdateResult === false) {
@@ -250,7 +257,8 @@ function executeOrderSingleHost($hostId, $executeUserId, $userId, $orderId) {
     
     return [
         'balanceDelta'  => $balanceDelta,
-        'ts'            => $orderData['ts']
+        'ts'            => $orderData['ts'],
+        'finishTs'      => $finishTs
     ];
 }
 
@@ -266,7 +274,8 @@ function executeOrderSingleHost($hostId, $executeUserId, $userId, $orderId) {
  * 
  * @return array|null данные выполненного заказа (null - если заказ не найден или уже выполнен):
  *                      balanceDelta - изменение баланса исполнителя,
- *                      ts - unix-время создания заказа (для быстрого его поиска по дайджесту)
+ *                      ts - unix-время создания заказа (для быстрого его поиска по дайджесту),
+ *                      finishTs - unix-время выполнения заказа (для добавления в ленту выполненных заказов)
  * 
  * @throws Exception при ошибках в работе с базой
  */
@@ -280,7 +289,7 @@ function executeOrderMultiHost($executeUserHostId, $orderHostId, $executeUserId,
             $orderLink, 
             'SELECT ts, price '
             . 'FROM users_orders '
-            . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND status=0 '
+            . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND finished=0 '
             . 'LIMIT 1');
     
     if ($orderResult === false) {
@@ -294,9 +303,11 @@ function executeOrderMultiHost($executeUserHostId, $orderHostId, $executeUserId,
     $orderData = mysqli_fetch_assoc($orderResult);
     mysqli_free_result($orderData);
     
+    $finishTs = time();
+    
     $orderUpdateResult = mysqli_query($orderLink, 
             'UPDATE users_orders '
-            . 'SET status=1, status_user_id=' . $executeUserId . ' '
+            . 'SET finished=1, finished_user_id=' . $executeUserId . ', finished_ts=' . $finishTs . ' '
             . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND status=0 '
             . 'LIMIT 1');
     
@@ -324,7 +335,8 @@ function executeOrderMultiHost($executeUserHostId, $orderHostId, $executeUserId,
     
     return [
         'balanceDelta'  => $balanceDelta,
-        'ts'            => $orderData['ts']
+        'ts'            => $orderData['ts'],
+        'finishTs'      => $finishTs
     ];
 }
 
@@ -368,4 +380,52 @@ function checkUserAuthorized() {
     if (!$authorized) {
         \Response\redirect('/login.php');
     }
+}
+
+/**
+ * Добавить в заказ в список завершенных заказов пользователя.
+ * 
+ * @param int $finishUserHostId ID хоста, на котором лежат данные исполнителя
+ * @param int $finishUserId ID исполнителя
+ * @param int $finishTs unix-время выполнения заказа
+ * @param string $balanceDelta полученная исполнителем сумма денег
+ * @param int $userId ID заказчика
+ * @param int $orderId ID заказа
+ * 
+ * @return bool удалось ли добавить запись
+ */
+function addOrderToFinished($finishUserHostId, $finishUserId, $finishTs, $balanceDelta, $userId, $orderId) {
+    $return = true;
+    try {
+        $link = \Database\getConnectionOrFall($finishUserHostId);
+        $hostId = (int) \Database\fetchOne(
+                $link, 
+                'SELECT host_id '
+                . 'FROM finished_orders_shards '
+                . 'WHERE finished_user_id=' . $finishUserId . ' AND from_finished_ts <= ' . $finishTs . ' '
+                . 'ORDER BY from_finished_ts ASC '
+                . 'LIMIT 1');
+        
+        if ($hostId <= 0) {
+            throw new Exception(
+                    'Не удалось найти хост для добавления записи о выполнении заказа '
+                    . '[' . $finishUserId . ', ' . $finishTs . ', ' . $userId . ', ' . $orderId . ']');
+        }
+        
+        $finishedLink = \Database\getConnectionOrFall($hostId);
+        $result = mysqli_query(
+                $finishedLink, 
+                'INSERT INGORE INTO finished_orders(finished_user_id, finished_ts, income, user_id, order_id) '
+                . 'VALUES(' . $finishUserId . ', ' . $finishTs . ', ' . $balanceDelta . ', ' . $userId . ', ' . $orderId . ')');
+        
+        if ($result === false) {
+            throw new Exception('При выполнении запроса на хосте [' . $hostId . '] возникла ошибка: ' . mysqli_error($finishedLink));
+        }
+        
+    } catch (Exception $Exception) {
+        error_log($Exception->getMessage());
+        $return = false;
+    }
+    
+    return $return;
 }

@@ -29,6 +29,18 @@ function loadOrders() {
 		}
 		
 		$response['orders'] = \Order\loadListForUser(\Auth\getCurrentUserId(), $status, $maxOrderId);
+        
+        $finishedUserIdsMap = [];
+        foreach ($response['orders'] as $order) {
+            if ($order['finished_user_id'] > 0) {
+                $finishedUserIdsMap[$order['finished_user_id']] = true;
+            }
+        }
+        
+        if (count($finishedUserIdsMap) > 0) {
+            $response['users'] = \User\loadListByIds(array_keys($finishedUserIdsMap));
+        }
+        
 	} catch (Exception $Exception) {
 		error_log($Exception->getMessage());
         \Response\jsonAddError($response, \Error\PROCESSING_ERROR);

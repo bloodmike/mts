@@ -61,6 +61,7 @@ CREATE TABLE `users_orders`(
     `price`             DECIMAL(10,2)   UNSIGNED NOT NULL DEFAULT '0.00', -- сумма заказа
     `finished`          TINYINT         UNSIGNED NOT NULL DEFAULT '0', -- выполнен ли заказ
     `finished_user_id`  BIGINT          UNSIGNED NOT NULL, -- ID исполнителя заказа
+    `finished_ts`       INT             UNSIGNED NOT NULL DEFAULT 0, -- unix-время выполнения заказа
     PRIMARY KEY(`user_id`, `order_id`),
     KEY(`user_id`, `finished`, `order_id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
@@ -94,9 +95,10 @@ CREATE TABLE `orders_digest_shards`(
 -- Данные по расположению выполненных заказов лежат на одних хостах с данными пользователей.
 --
 CREATE TABLE `finished_orders_shards`(
-    `finished_user_id`  BIGINT UNSIGNED NOT NULL, -- ID пользователя, выполнившего заказ
-    `from_finish_ts`    BIGINT UNSIGNED NOT NULL, -- минимальное время выполнения заказа (включительно)
-    PRIMARY KEY(`finished_user_id`, `from_finish_ts`)
+    `finished_user_id`  BIGINT  UNSIGNED NOT NULL, -- ID пользователя, выполнившего заказ
+    `from_finished_ts`  BIGINT  UNSIGNED NOT NULL, -- минимальное время выполнения заказа (включительно)
+    `host_id`           INT     UNSIGNED NOT NULL, -- ID хоста, на котором лежит лента выполненных заказов пользователя
+    PRIMARY KEY(`finished_user_id`, `from_finished_ts`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
 
 --
@@ -104,8 +106,9 @@ CREATE TABLE `finished_orders_shards`(
 --
 CREATE TABLE `finished_orders`(
     `finished_user_id`  BIGINT UNSIGNED NOT NULL, -- ID исполнителя
-    `finish_ts`         BIGINT UNSIGNED NOT NULL, -- unix-время исполнения заказа
+    `finished_ts`       BIGINT UNSIGNED NOT NULL, -- unix-время исполнения заказа
     `user_id`           BIGINT UNSIGNED NOT NULL, -- ID заказчика
     `order_id`          BIGINT UNSIGNED NOT NULL, -- ID заказа
-    PRIMARY KEY(`finished_user_id`, `finish_ts`, `user_id`, `order_id`)
+    `income`            DECIMAL(10,2)   UNSIGNED NOT NULL DEFAULT '0.00', -- прибыль исполнителя
+    PRIMARY KEY(`finished_user_id`, `finished_ts`, `user_id`, `order_id`)
 ) ENGINE=innoDB DEFAULT CHARSET=utf8;
