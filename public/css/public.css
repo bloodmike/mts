@@ -57,7 +57,8 @@ html {
 	padding: 0 15px;
 }
 
-#header a:hover {
+#header a:hover,
+#header a.selected {
 	background-color: #51759b;
 }
 

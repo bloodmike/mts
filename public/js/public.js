@@ -29,13 +29,13 @@ function code2error(code) {
  * 
  * @returns {string} строка с параметрами вида: a=b&c=d&e[0]=f&...
  */
-function objectToString(object, prefix) {
+function object2String(object, prefix) {
 	var str = [];
 	for (var i in object) {
 		if (object.hasOwnProperty(i)) {
 			var key = prefix ? prefix + "[" + i + "]" : i;
 			var value = object[i];
-			var part = typeof value === "object" ? objectToString(value, key) : encodeURIComponent(key) + "=" + encodeURIComponent(value);
+			var part = typeof value === "object" ? object2String(value, key) : encodeURIComponent(key) + "=" + encodeURIComponent(value);
 			str.push(part);
 		}
 	}
@@ -72,7 +72,7 @@ function ajaxJson(method, url, parameters, callback, callbackFail) {
 			}
         }
     };
-    xhr.send(objectToString(parameters));
+    xhr.send(object2String(parameters));
     return xhr;
 }
 

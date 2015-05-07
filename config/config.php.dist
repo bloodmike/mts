@@ -1,0 +1,9 @@
+<?php
+/* 
+ * Пример файла конфигурации
+ * 
+ * @author mkoshkin
+ */
+
+// ID хоста базы по умолчанию
+$rootDatabaseHostId = {{ databaseHostId }};

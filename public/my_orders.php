@@ -6,6 +6,7 @@
  */
 
 require_once('../lib/autoload.php');
+
 \Action\checkUserAuthorized();
 
 /**
@@ -14,5 +15,8 @@ require_once('../lib/autoload.php');
 function htmlContent() {
     
 }
+
+$pageTitle = 'Мои заказы';
+$pageMenu = 'my_orders';
 
 require_once('../templates/html.php');

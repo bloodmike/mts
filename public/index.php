@@ -14,6 +14,6 @@ try {
 		\Response\redirect('/login.php');
 	}
 } catch (Exception $Exception) {
-	trigger_error($Exception->getMessage(), E_USER_ERROR);
+	error_log($Exception->getMessage());
 	echo $Exception->getMessage();
 }

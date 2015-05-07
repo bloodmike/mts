@@ -6,6 +6,7 @@
  */
 
 require_once('../lib/autoload.php');
+
 \Action\checkUserAuthorized();
 
 /**
@@ -16,5 +17,6 @@ function htmlContent() {
 }
 
 $pageTitle = 'Лента заказов';
+$pageMenu = 'feed';
 
 require_once('../templates/html.php');
