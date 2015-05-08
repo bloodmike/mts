@@ -56,3 +56,8 @@ const USER_NOT_FOUND = 9;
  * Неправильная сумма заказа
  */
 const INCORRECT_ORDER_PRICE = 10;
+
+/**
+ * Не удалось добавить заказ
+ */
+const UNABLE_TO_ADD_ORDER = 11;

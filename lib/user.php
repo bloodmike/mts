@@ -44,7 +44,7 @@ function loadById($userId) {
         // не найден хост - не найден пользователь
         return null;
     }
-    return Database\fetchRow($link, 'SELECT * FROM users WHERE id=' . $userId . ' LIMIT 1');
+    return \Database\fetchRow($link, 'SELECT * FROM users WHERE id=' . $userId . ' LIMIT 1');
 }
 
 /**
@@ -60,7 +60,7 @@ function getHostConnection($userId) {
         return null;
     }
     
-    return Database\getConnectionOrFall($hostId);
+    return \Database\getConnectionOrFall($hostId);
 }
 
 /**
@@ -106,14 +106,11 @@ function findHostId($userId) {
             throw new Exception('При поиске шарды пользователя [' . $userId . '] возникла ошибка цикличности');
         }
         
-        $link = Database\getConnection($hostId);
-        if ($link === false) {
-            throw new Exception('Ошибка при получении подключения к хосту [' . $hostId . ']');
-        }
+        $link = \Database\getConnectionOrFall($hostId);
         
         $userBlockInfo = \Database\fetchRow(
                 $link, 
-                'SELECT host_id, type FROM users_shards WHERE from_user_id <= ' . $userId . ' AND to_user_id < ' . $userId . ' LIMIT 1');
+                'SELECT host_id, type FROM users_shards WHERE from_user_id <= ' . $userId . ' AND ' . $userId . ' < to_user_id LIMIT 1');
         
         if ($userBlockInfo === null) {
             // шарда не найдена

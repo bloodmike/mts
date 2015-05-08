@@ -29,12 +29,19 @@ function addOrder() {
             return \Response\jsonAddError($response, \Error\INCORRECT_ORDER_PRICE);
         }
         
-        $response['order'] = \Action\createOrder($price);
+        $orderData = \Action\createOrder($price);
+		if ($orderData === null) {
+			\Response\jsonAddError($response, \Error\UNABLE_TO_ADD_ORDER);
+		} else {
+			$response['order'] = $orderData;
+		}
         
     } catch (Exception $Exception) {
         error_log($Exception->getMessage());
         \Response\jsonAddError($response, \Error\PROCESSING_ERROR);
     }
+	
+	return $response;
 }
 
 echo json_encode(addOrder());

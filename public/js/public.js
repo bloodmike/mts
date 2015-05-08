@@ -59,7 +59,9 @@ function ajaxJson(method, url, parameters, callback, callbackFail) {
     
     var xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
-	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	if (method === "POST") {
+		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	}
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
 			var json = JSON.parse(xhr.responseText);
@@ -72,7 +74,11 @@ function ajaxJson(method, url, parameters, callback, callbackFail) {
 			}
         }
     };
-    xhr.send(object2String(parameters));
+	if (method === "POST") {
+		xhr.send(object2String(parameters));
+	} else {
+		xhr.send(null);
+	}
     return xhr;
 }
 

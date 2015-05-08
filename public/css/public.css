@@ -51,15 +51,31 @@ html {
 	line-height: 48px;
 	height: 50px;
 	text-decoration: none;
+	vertical-align: top;
+}
+
+#header-menu {
+	display:inline-block;
+	float: right;
+    width: 640px;
 }
 
 #header-menu a {	
 	padding: 0 15px;
+	float:left;
 }
 
 #header a:hover,
 #header a.selected {
 	background-color: #51759b;
+}
+
+#header-menu #header-menu__logout {
+	float: right;
+}
+
+#header-balance {
+	display: inline-block;
 }
 
 .panel {
@@ -74,9 +90,13 @@ html {
 	padding: 30px;
 }
 
+.error-box {
+	box-shadow: 0 0 3px 5px rgba(127, 0, 0, 0.5);
+}
+
 /* авторизация */ 
 
-.login-error-message {
+.error-message {
 	display: none;
 	line-height: 20px;
 	margin-bottom: 25px;
@@ -85,7 +105,7 @@ html {
 	padding: 10px 25px;
 }
 
-.login-error-message.visible {
+.error-message.error-visible {
 	display: block;
 }
 

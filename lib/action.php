@@ -26,7 +26,7 @@ const COMMISSION = 0.3;
  */
 function createOrder($price) {
     $userId = \Auth\getCurrentUserId();
-    $host = \Order\loadHostForNewOrder($userId);
+    $host = \Order\loadHostInfoForNewOrder($userId);
     if ($host === null) {
         return null;
     }
@@ -45,19 +45,19 @@ function createOrder($price) {
     $time = time();
     $result = mysqli_query(
             $hostLink, 
-            'INSERT INTO users_orders'
+            'INSERT INTO users_orders '
             . 'SET user_id=' . $userId . ', '
             . 'order_id=' . $orderId . ', '
             . 'ts=' . $time . ', '
-            . 'status=0, '
-            . 'price=' . $price); // TODO: сделать!
+            . 'finished=0, '
+            . 'price=' . $price);
     
     if ($result === false) {
         throw new Exception('Не удалось добавить заказ [' . $userId . ', ' . $orderId . ']: ' . mysqli_error($hostLink));
     }
     
     // добавляем заказ в дайджест, чтобы его смогли увидеть все пользователи
-    if (!addOrderToDigest($userId, $orderId, $time, $price)){
+    if (!addOrderToDigest($userId, $orderId, $time, $price)) {
         mysqli_rollback($hostLink);
         return null;
     }
@@ -99,6 +99,7 @@ function addOrderToDigest($userId, $orderId, $ts, $price) {
             throw new Exception('При добавлении заказа в дайджест на хосте [' . $hostId . '] возникла ошибка: ' . mysqli_error($link));
         }
     } catch (Exception $Exception) {
+		error_log($Exception->getMessage());
         $return = false;
     }
     

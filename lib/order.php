@@ -48,31 +48,20 @@ function loadNextOrderId(\mysqli $link, $userId, $minOrderId) {
 /**
  * @param int $userId ID пользователя
  * 
- * @return int ID хоста, на котором следует размещать новый заказ от пользователя 
- *              0 - не найден хост для размещения заказа
+ * @return array информация о хосте, на котором будет размещен заказ (null - если хост не найден):
+ *				host_id: ID хоста,
+ *				from_order_id: минимальный ID хоста на хосте
  * 
  * @throws Exception при проблемах с запросами
  */
-function loadHostIdForNewOrder($userId) {
-    $userHostLink = User\getHostConnection($userId);
+function loadHostInfoForNewOrder($userId) {
+    $userHostLink = \User\getHostConnection($userId);
     if ($userHostLink === null) {
         // не найден хост пользователя
-        return 0;
+        return null;
     }
     
-    return fetchHostIdForNewOrder($userHostLink, $userId);
-}
-
-/**
- * @param \mysqli $link подключение к хосту с данными пользователя
- * @param int $userId ID пользователя
- * 
- * @return int ID хоста, куда добавляются заказы пользователя
- */
-function fetchHostIdForNewOrder(\mysqli $link, $userId) {
-    return (int) \Database\fetchOne(
-            $link, 
-            'SELECT host_id FROM users_orders_shards WHERE user_id=' . $userId . ' ORDER BY from_order_id DESC LIMIT 1');
+    return fetchHostInfoForNewOrder($userHostLink, $userId);
 }
 
 /**
@@ -101,7 +90,7 @@ function loadHostId($userId, $orderId) {
         return 0;
     }
     
-    $userHostLink = User\getHostConnection($userId);
+    $userHostLink = \User\getHostConnection($userId);
     if ($userHostLink === null) {
         // нет подключения - нет юзера - нет заказа
         return 0;
@@ -160,7 +149,7 @@ function loadListForUser($userId, $status = LOAD_USER_ORDERS_ALL, $maxOrderId = 
         return [];
     }
     
-    $userHostLink = User\getHostConnection($userId);
+    $userHostLink = \User\getHostConnection($userId);
     if ($userHostLink === null) {
         return [];
     }

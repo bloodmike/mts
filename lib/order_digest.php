@@ -67,12 +67,12 @@ function loadOrders($limit, $maxTs) {
     $orders = [];
         
     do {
-        $hostIds = \Database\fetchPairs(
+        $hostIds = \Database\fetchSingle(
                 $link, 
                 'SELECT host_id, from_ts '
                 . 'FROM orders_digest_shards '
                 . 'WHERE from_ts <= ' . $maxTs . ' AND ' . $maxTs . ' < to_ts');
-
+		
         if (count($hostIds) == 0) {
             break;
         }
@@ -89,7 +89,7 @@ function loadOrders($limit, $maxTs) {
                     . 'ORDER BY ts DESC, user_id DESC, order_id DESC '
                     . 'LIMIT ' . ($limit - count($orders)));
         }
-        
+		
         $foundOrders = mergeSortOrders($shardOrders, ($limit - count($orders)));
         $orders = array_merge($orders, $foundOrders);
     } while (count($orders) < $limit);

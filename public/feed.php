@@ -13,10 +13,25 @@ require_once('../lib/autoload.php');
  * Страница с лентой заказов
  */
 function htmlContent() {
-    
+    ?>
+<div class="panel panel-container">
+	<div id="add-order-error-message" class="error-message"></div>
+	
+	<form id="add-order-form">
+		Заказ на сумму <input type="text" id="add-order-form__price" value="" placeholder="100.00" style="width: 70px; text-align: right;"/> руб. <input type="submit" value="Добавить"/>
+	</form>
+</div>
+
+<div class="panel panel-container">
+	<div id="orders-list"></div>
+</div>
+	<?
 }
 
-$pageTitle = 'Лента заказов';
+$pageTitle = 'Заказы';
 $pageMenu = 'feed';
+$javascripts = [
+	'/js/feed.js'
+];
 
 require_once('../templates/html.php');

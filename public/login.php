@@ -12,7 +12,7 @@ require_once('../lib/autoload.php');
 function htmlContent() {
     ?>
 <div id="login-page" class="login-page panel panel-container">
-    <div id="login-error-message" class="login-error-message"></div>
+    <div id="login-error-message" class="error-message"></div>
     <form id="login-form" class="login-form">
         <div class="login-form__row">
             <label>Логин:</label><input type="text" name="login" id="login-form__login" value="" />

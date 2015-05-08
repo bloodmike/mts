@@ -152,6 +152,29 @@ function fetchAll(mysqli $link, $query, $throwOnError = true) {
  * @param mysqli $link подключение к базе
  * @param string $query запрос
  * 
+ * @return array хэшмэп со значениями второго столбца результата, разложенными по значениям первого столбца
+ * 
+ * @throws Exception при ошибках выполнения запроса
+ */
+function fetchPairs($link, $query) {
+	$result = mysqli_query($link, $query);
+    
+    $rows = [];
+    if ($result === false) {
+		throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+    } else {
+        while ($row = mysqli_fetch_row($result)) {
+            $rows[$row[0]] = $row[1];
+        }
+        mysqli_free_result($result);
+    }
+    return $rows;
+}
+
+/**
+ * @param mysqli $link подключение к базе
+ * @param string $query запрос
+ * 
  * @return array|null первую строку результата запроса или null, если запрос не вернул строк
  * 
  * @throws Exception при ошибках выполнения запроса
@@ -160,7 +183,7 @@ function fetchRow(mysqli $link, $query) {
     $result = mysqli_query($link, $query);
     if ($result === false) {
         throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
-    } elseif ($result->num_rows == 0) {
+    } elseif (mysqli_num_rows($result) == 0) {
         return null;
     }
     
