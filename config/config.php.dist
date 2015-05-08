@@ -7,3 +7,25 @@
 
 // ID хоста базы по умолчанию
 $rootDatabaseHostId = {{ databaseHostId }};
+
+/**
+ * Переопределяемая в конфиге функция для получения имени/адреса хоста по ID
+ * 
+ * @param int $hostId
+ * 
+ * @return string
+ */
+function getDatabaseHostName($hostId) {
+    return '127.0.0.1';
+}
+
+/**
+ * Переопределяемая в конфиге функция для получения порта подключения по ID хоста
+ * 
+ * @param int $hostId
+ * 
+ * @return int
+ */
+function getDatabasePort($hostId) {
+    return 3306;
+}

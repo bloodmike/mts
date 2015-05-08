@@ -57,6 +57,10 @@ function getConnectionOrFall($hostId) {
  * @return string адрес хоста
  */
 function getHostName($hostId) {
+    if (function_exists('\getDatabaseHostName')) {
+        return \getDatabaseHostName($hostId);
+    }
+    
     return 'host' . $hostId . '.database';
 }
 
@@ -66,6 +70,10 @@ function getHostName($hostId) {
  * @return int номер порта для подключения
  */
 function getHostPort($hostId) {
+    if (function_exists('\getDatabasePort')) {
+        return \getDatabasePort($hostId);
+    }
+    
     return 3305 + $hostId;
 }
 
