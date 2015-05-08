@@ -105,3 +105,22 @@ function setUser($userId, $passwordHash) {
     $_SESSION[USER_ID_SESSION_KEY] = $userId;
     $_SESSION[PASSWORD_HASH_SESSION_KEY] = $passwordHash;
 }
+
+/**
+ * @global array|null $currentUser авторизованный пользователь
+ * 
+ * @return array|null данные пользователя для вывода в javascript'е
+ */
+function getCurrentUserPublicData() {
+    global $currentUser;
+    
+    if ($currentUser !== null) {
+        return [
+            'id'        => $currentUser['id'],
+            'login'     => $currentUser['login'],
+            'balance'   => $currentUser['balance'],
+        ];
+    }
+    
+    return null;
+}

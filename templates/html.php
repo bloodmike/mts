@@ -11,7 +11,7 @@
 		<meta charset="utf-8"/>
         <title><?=$pageTitle;?></title>
         <link rel="stylesheet" type="text/css" href="/css/public.css" />
-        <script type="text/javascript">var currentUser=<?=json_encode($currentUser);?>;</script>
+        <script type="text/javascript">var currentUser=<?=json_encode(\Auth\getCurrentUserPublicData());?>;</script>
 	</head>
 	<body>
         <div id="body">
@@ -25,12 +25,13 @@
 						<a href="/my_orders.php"<?=($pageMenu == 'my_orders' ? ' class="selected"' : '')?>>Мои заказы</a>
 						<a href="/finished_orders.php"<?=($pageMenu == 'finished_orders' ? ' class="selected"' : '')?>>Выполненные заказы</a>
 						
-						<span id="header-balance"></span>
+						<span id="header-balance"><?=$currentUser['balance'];?></span>
 
 						<a href="/logout.php" id="header-menu__logout">Выход</a>
 					</div>
 					<?}?>
 				</div>
+                <div id="header-error" class="header-error"></div>
             </div>
             
             <div id="content"><?

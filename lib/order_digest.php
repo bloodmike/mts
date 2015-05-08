@@ -83,7 +83,7 @@ function loadOrders($limit, $maxTs) {
             $digestLink = \Database\getConnectionOrFall($hostId);
             $shardOrders[$hostId] = \Database\fetchAll(
                     $digestLink, 
-                    'SELECT * '
+                    'SELECT ts, user_id, order_id, price '
                     . 'FROM orders_digest '
                     . 'WHERE ts <= ' . $maxTs . ' '
                     . 'ORDER BY ts DESC, user_id DESC, order_id DESC '

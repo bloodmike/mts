@@ -16,11 +16,13 @@ window.onload = function() {
 					password: document.getElementById('login-form__password').value
 				},
 				function(json) {
-					if (json.hasOwnProperty('error')) {
+                    var Response = new JsonResponse(json);
+					if (Response.hasErrors()) {
 						elementAddClass(loginErrorMessage, 'error-visible');
-						for (var i in json['error']) {
+                        var errors = Response.getErrors();
+						for (var i in errors) {
 							var div = document.createElement('div');
-							div.innerHTML = code2error(json['error'][i]);
+							div.innerHTML = Errors.code2error(errors[i]);
 							loginErrorMessage.appendChild(div);
 						}
 					} else {

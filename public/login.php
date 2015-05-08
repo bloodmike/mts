@@ -30,7 +30,7 @@ function htmlContent() {
 
 $pageTitle = 'Добро пожаловать!';
 $javascripts = [
-	'/js/login.js'
+	'/js/pages/login.js'
 ];
 
 require_once('../templates/html.php');

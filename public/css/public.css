@@ -32,6 +32,15 @@ html {
 	background: #567CA4;
 }
 
+.header-error {
+    display:none;
+    position: absolute;
+}
+
+.header-error.visible {
+    display: block;
+}
+
 #header-bar {
 	width: 990px;
 	margin: 0 auto;
@@ -136,4 +145,18 @@ html {
 
 .login-form__submit-row {
 	padding-left: 140px;
+}
+
+/* Заказы */
+
+.order_finished {
+    background: #F9F6E7;
+}
+
+.order__execute {
+    cursor: pointer;
+}
+
+.order_finished .order__execute {
+    display: none;
 }
