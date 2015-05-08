@@ -4,7 +4,7 @@ window.onload = function() {
 	
 	loginForm.onsubmit = function(event) {
 		loginErrorMessage.innerHTML = '';
-		elementRemoveClass(loginErrorMessage, 'error-visible');
+		Html.removeClass(loginErrorMessage, 'error-visible');
 		
 		event.preventDefault();
 		
@@ -18,7 +18,7 @@ window.onload = function() {
 				function(json) {
                     var Response = new JsonResponse(json);
 					if (Response.hasErrors()) {
-						elementAddClass(loginErrorMessage, 'error-visible');
+						Html.addClass(loginErrorMessage, 'error-visible');
                         var errors = Response.getErrors();
 						for (var i in errors) {
 							var div = document.createElement('div');

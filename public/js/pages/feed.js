@@ -17,14 +17,14 @@
 		event.preventDefault();
 		var price = parseFloat(priceInput.value);
 		if (!isNaN(price) && price >= 0.00) {
-			elementRemoveClass(addOrderErrorMessage, 'error-visible');
+			Html.removeClass(addOrderErrorMessage, 'error-visible');
 			Actions.createOrder(
 					price, 
 					function(json) {
                         var Response = new JsonResponse(json);
 						if (Response.hasErrors()) {
 							addOrderErrorMessage.innerHTML = '';
-							elementAddClass(addOrderErrorMessage, 'error-visible');
+							Html.addClass(addOrderErrorMessage, 'error-visible');
                             
                             var errors = Response.getErrors();
 							for (var i in errors) {
@@ -40,7 +40,7 @@
 						console.log(xhr);
 					});
 		} else {
-			elementAddClass(priceInput, 'error-box');
+			Html.addClass(priceInput, 'error-box');
 		}
 	};
 	
@@ -118,7 +118,7 @@
                                 
                                 Errors.showFromResponse(Response);
                             } else {
-                                elementAddClass(div, 'order_finished');
+                                Html.addClass(div, 'order_finished');
                                 Layout.updateBalance(Response.getField('balanceDelta'));
                             }
                         }
@@ -132,9 +132,9 @@
         }
         
         if (orders.length >= 50) {
-            elementAddClass(ordersListLoadMore, 'visible');
+            Html.addClass(ordersListLoadMore, 'visible');
         } else {
-            elementRemoveClass(ordersListLoadMore, 'visible');
+            Html.removeClass(ordersListLoadMore, 'visible');
         }
     };
     
@@ -145,7 +145,7 @@
 	 */
 	var loadFeed = function(time) {
 		ordersListLoading = true;
-        elementAddClass(ordersListLoadMore, 'loading');
+        Html.addClass(ordersListLoadMore, 'loading');
         
 		ajaxJson(
 				"GET", 
@@ -153,7 +153,7 @@
 				null,
 				function(json) {
                     var Response = new JsonResponse(json);
-                    elementRemoveClass(ordersListLoadMore, 'loading');
+                    Html.removeClass(ordersListLoadMore, 'loading');
                     
                     if (Response.hasErrors()) {
                         Errors.showFromResponse(Response);
@@ -165,7 +165,7 @@
 					ordersListLoading = false;
 				},
 				function(xhr) {
-                    elementRemoveClass(ordersListLoadMore, 'loading');
+                    Html.removeClass(ordersListLoadMore, 'loading');
                     ordersListLoading = false;
 				});
 	};

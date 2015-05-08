@@ -43,7 +43,7 @@
 		<script type="text/javascript" src="/js/errors.js"></script>
         <script type="text/javascript" src="/js/public.js"></script>
         <?if(\Auth\getCurrentUserId() > 0){?>
-        <script type="text/javascript" src="/js/ajax.js"></script>
+        <script type="text/javascript" src="/js/actions.js"></script>
         <?}?>
 		<?if (isset($javascripts)) {
 			foreach ($javascripts as $javascript){?>

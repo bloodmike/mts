@@ -115,6 +115,48 @@ function elementAddClass(element, className) {
 	return element;
 }
 
+var Html = {
+    /**
+     * Добавляет переданному элементу css-класс
+     * 
+     * @param {Element|null} element элемент
+     * @param {string} className имя класса, которое требуется добавить
+     * 
+     * @returns {Element|null} переданный элемент
+     */
+    addClass: function(element, className) {
+        if (element !== null) {
+            element.className += ' ' + className;
+        }
+
+        return element;
+    },
+    
+    /**
+     * Удаляет у переданного элемента css-класс
+     * 
+     * @param {Element|null} element элемент
+     * @param {string} className имя класса, которое требуется удалить
+     * 
+     * @returns {Element|null} переданный элемент
+     */
+    removeClass: function(element, className) {
+        if (element !== null) {
+            var classNames = element.className.split(' ');
+            var newClassNames = [];
+
+            for (var i in classNames) {
+                if (className !== classNames[i]) {
+                    newClassNames.push(classNames[i]);
+                }
+            }
+            element.className = newClassNames.join(' ');
+        }
+
+        return element;
+    }
+};
+
 /**
  * @type {Object} функционал для вывода ошибок
  */
@@ -144,7 +186,7 @@ var Errors = {
      */
     hide: function() {
             Errors.__timeout = null;
-            elementRemoveClass(Errors.getContainer(), 'visible');
+            Html.removeClass(Errors.getContainer(), 'visible');
         },
     
     /**
