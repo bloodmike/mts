@@ -160,3 +160,69 @@ html {
 .order_finished .order__execute {
     display: none;
 }
+
+.orders-list__load-more {
+	background: none repeat scroll 0 0 #eff1f3;
+    color: #738392;
+	cursor: pointer;
+    display: block;
+    margin: 15px 0 0;
+    padding: 10px;
+    text-align: center;
+}
+
+.orders-list:after {
+	clear: both;
+	content: "";
+	display: block;
+}
+
+.order {
+	border: 1px solid #eef3fa;
+	box-sizing: border-box;
+    float: left;
+    height: 80px;
+    padding: 15px 25px;
+	position: relative;
+    width: 50%;
+}
+
+.order:hover {
+	background: #f7f8fa;
+}
+
+.order__id {
+	font-size: 11px;
+	color: #777;
+}
+
+.order__id:before {
+	clear: both;
+	content: "";
+	display: block;
+}
+
+.order__owner {
+	color: #3e638a;
+	float: left;
+	font-size: 16px;
+	margin-bottom: 2px;
+}
+
+.order__price {
+	float: right;
+}
+
+.order__execute {
+	position: absolute;
+	bottom: 25px;
+	right: 25px;
+}
+
+.orders-list__load-more:hover {
+	background: #e9edf1;
+}
+
+.orders-list__load-more.hidden {
+	display: none;
+}

@@ -19,7 +19,13 @@ function loadDigest() {
             return ['orders' => []];
         }
         
-        $response['orders'] = \Digest\loadOrders(50, $ts);
+		$ignoreUserId = (int) filter_input(INPUT_GET, 'last_user_id', FILTER_SANITIZE_NUMBER_INT);
+		$ignoreOrderId = (int) filter_input(INPUT_GET, 'last_order_id', FILTER_SANITIZE_NUMBER_INT);
+		
+		$limit = 50;		
+        $response['orders'] = \Digest\loadOrders($limit, $ts, $ignoreUserId, $ignoreOrderId);
+		$response['orders_more'] = (count($response['orders']) >= $limit);
+		
         $userIdsMap = [];
         foreach ($response['orders'] as $order) {
             $userIdsMap[$order['user_id']] = true;
@@ -28,7 +34,7 @@ function loadDigest() {
         $response['users'] = \User\loadListByIds(array_keys($userIdsMap));
 
     } catch (Exception $Exception) {
-		error_log($Exception->getMessage());
+		error_log($Exception->getFile() . '[' . $Exception->getLine() . ']: ' .  $Exception->getMessage());
         \Response\jsonAddError($response, \Error\PROCESSING_ERROR);
     }
 

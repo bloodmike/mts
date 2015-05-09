@@ -99,7 +99,7 @@ function addOrderToDigest($userId, $orderId, $ts, $price) {
             throw new Exception('При добавлении заказа в дайджест на хосте [' . $hostId . '] возникла ошибка: ' . mysqli_error($link));
         }
     } catch (Exception $Exception) {
-		error_log($Exception->getMessage());
+		error_log($Exception->getFile() . '[' . $Exception->getLine() . ']: ' .  $Exception->getMessage());
         $return = false;
     }
     

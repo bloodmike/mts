@@ -23,8 +23,8 @@ function htmlContent() {
 </div>
 
 <div class="panel panel-container">
-	<div id="orders-list"></div>
-    <div id="orders-list__load-more" class="orders-list__load-more">
+	<div id="orders-list" class="orders-list"></div>
+    <div id="orders-list__load-more" class="orders-list__load-more hidden">
         <span>Загрузить еще</span>
     </div>
 </div>

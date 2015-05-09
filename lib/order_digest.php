@@ -37,7 +37,7 @@ function findHostId($userId, $orderId, $ts) {
     
     $hostId = \Database\fetchOne(
             $link, 
-            'SELECT host_id FROM orders_digest '
+            'SELECT host_id FROM orders_digest_shards '
             . "WHERE from_ts <= " . $ts . " AND " . $ts . " < to_ts AND from_hash <= '" . $hash . "' AND '" . $hash . "' < to_hash "
             . "LIMIT 1");
     
@@ -55,17 +55,25 @@ function findHostId($userId, $orderId, $ts) {
  * 
  * @param int $limit количество загружаемых записей
  * @param int $maxTs ограничение по времени добавления сверху
+ * @param int $ignoreUserId ID заказчика заказа, который требуется пропустить
+ * @param int $ignoreOrderId ID заказа, который требуется пропустить
  * 
  * @return array данные заказов
  * 
  * @throws Exception при ошибках в работе с базой
  */
-function loadOrders($limit, $maxTs) {
+function loadOrders($limit, $maxTs, $ignoreUserId, $ignoreOrderId) {
     global $rootDatabaseHostId;
     
     $link = \Database\getConnectionOrFall($rootDatabaseHostId);
     $orders = [];
-        
+    
+	$ignoreWhere = '';
+	if ($ignoreUserId > 0 && $ignoreOrderId > 0) {
+		// условие для исключения последнего в списке заказа от предыдущего запроса
+		$ignoreWhere = ' AND (user_id <> ' . $ignoreUserId .' OR order_id <> ' . $ignoreOrderId .')';
+	}
+	
     do {
         $hostIds = \Database\fetchSingle(
                 $link, 
@@ -81,16 +89,26 @@ function loadOrders($limit, $maxTs) {
         
         foreach ($hostIds as $hostId) {
             $digestLink = \Database\getConnectionOrFall($hostId);
+			
+			// TODO: как-то улучшить запрос
             $shardOrders[$hostId] = \Database\fetchAll(
                     $digestLink, 
                     'SELECT ts, user_id, order_id, price '
                     . 'FROM orders_digest '
-                    . 'WHERE ts <= ' . $maxTs . ' '
+                    . 'WHERE ts <= ' . $maxTs . $ignoreWhere . ' '
                     . 'ORDER BY ts DESC, user_id DESC, order_id DESC '
                     . 'LIMIT ' . ($limit - count($orders)));
         }
 		
         $foundOrders = mergeSortOrders($shardOrders, ($limit - count($orders)));
+		$lastOrder = end($foundOrders);
+		if ($lastOrder !== false) {
+			$maxTs = $lastOrder['ts'] - 1; // TODO: не должно быть -1
+		} else {
+			break;
+		}
+		
+		$ignoreWhere = '';
         $orders = array_merge($orders, $foundOrders);
     } while (count($orders) < $limit);
     
@@ -109,7 +127,7 @@ function mergeSortOrders($shardOrders, $limit) {
     $result = [];
     
     if (count($shardOrders) == 1) {
-        return array_slice($shardOrders, 0, $limit);
+        return array_slice(reset($shardOrders), 0, $limit);
     }
     
     do {

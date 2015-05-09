@@ -160,7 +160,7 @@ function findHostsIds(array $userIds) {
         foreach ($searchAt as $hostId => $searchUserIds) {
             $whereArray = [];
             foreach ($searchUserIds as $userId) {
-                $whereArray[] = '(from_user_id <= ' . $userId . ' AND to_user_id < ' . $userId . ')';
+                $whereArray[] = '(from_user_id <= ' . $userId . ' AND ' . $userId . ' < to_user_id)';
             }
             
             $link = \Database\getConnection($hostId);
@@ -200,7 +200,7 @@ function findHostsIds(array $userIds) {
         
         $searchAt = $searchAtNew;
     } while (count($searchAt) > 0);
-    
+	
     return $result;
 }
 
@@ -217,9 +217,17 @@ function loadListByIds($userIds) {
     // получаем данные о хостах, на которых лежат пользователи
     $hostIds = findHostsIds($userIds);
     
+	$grouppedHostIds = [];
+	foreach ($hostIds as $userId => $hostId) {
+		if (!array_key_exists($hostId, $grouppedHostIds)) {
+			$grouppedHostIds[$hostId] = [];
+			$grouppedHostIds[$hostId][] = $userId;
+		}
+	}
+	
     $users = [];
     
-    foreach ($hostIds as $hostId => $searchUserIds) {
+    foreach ($grouppedHostIds as $hostId => $searchUserIds) {
         $link = \Database\getConnection($hostId);
         if ($link === false) {
             // если подключение не удалось установить - игнорируем блок пользователей

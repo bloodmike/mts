@@ -63,12 +63,23 @@
      */
     var ordersMinTs = Math.ceil((new Date()).getTime() / 1000);
     
+	/**
+	 * @type Number ID последнего добавленного заказа
+	 */
+	var ordersLastOrderId = 0;
+	
+	/**
+	 * @type Number ID заказчика последнего заказа
+	 */
+	var ordersLastUserId = 0;
+	
     /**
      * Добавить в дайджест перечисленные заказы
      * 
      * @param {Array} orders заказы
      */
 	var appendOrdersList = function(orders) {
+		
         for (var i in orders) {
             var order = orders[i];
             
@@ -76,20 +87,13 @@
             div.className = 'order';
             div.id = 'order-' + order['user_id'] + '-' + order['order_id'];
             
-            var divOrderId = document.createElement('div');
-            divOrderId.className = 'order__id';
-            divOrderId.title = 'ID заказа';
-            divOrderId.innerHTML = order['user_id'] + '-' + order['order_id'];
-            
-            div.appendChild(divOrderId);
-            
             var divOwner = document.createElement('div');
             divOwner.className = 'order__owner';
             divOwner.title = 'Заказчик';
             
             var login = UserStorage.getLogin(order['user_id']);
             if (login === '') {
-                login = 'Неизвестный';
+                login = 'неизвестный';
             }
             divOwner.innerHTML = login;
             div.appendChild(divOwner);
@@ -97,8 +101,14 @@
             var divPrice = document.createElement('div');
             divPrice.className = 'order__price';
             divPrice.title = 'Сумма заказа';
-            divPrice.innerHTML = order['price'];
+            divPrice.innerHTML = order['price'].toString() + '&#8381;';
             div.appendChild(divPrice);
+            
+            var divOrderId = document.createElement('div');
+            divOrderId.className = 'order__id';
+            divOrderId.title = 'ID заказа';
+            divOrderId.innerHTML = order['user_id'] + '-' + order['order_id'];
+            div.appendChild(divOrderId);
             
             if (!UserStorage.isCurrent(order['user_id'])) {
                 var divExecute = document.createElement('div');
@@ -129,6 +139,8 @@
             
             ordersList.appendChild(div);
             ordersMinTs = order['ts'];
+			ordersLastOrderId = order['order_id'];
+			ordersLastUserId = order['user_id'];
         }
         
         if (orders.length >= 50) {
@@ -141,15 +153,22 @@
 	/**
 	 * Вызывает загрузку ленты с последующим добавлением её в конец списка
 	 * 
-	 * @param {number} time ограничение по времени добавления заказа сверху
+	 * @param {Number} time ограничение по времени добавления заказа сверху
+	 * @param {Number} lastUserId ID заказчика последнего заказа
+	 * @param {Number} lastOrderId ID последнего заказа
 	 */
-	var loadFeed = function(time) {
+	var loadFeed = function(time, lastUserId, lastOrderId) {
 		ordersListLoading = true;
         Html.addClass(ordersListLoadMore, 'loading');
-        
+		
+		var query = '';
+		if (lastUserId > 0 && lastOrderId > 0) {
+			query = '&last_user_id=' + lastUserId.toString() + '&last_order_id=' + lastOrderId.toString();
+		} 
+		
 		ajaxJson(
 				"GET", 
-				"/feed_load.php?ts=" + time,
+				"/feed_load.php?ts=" + time + query,
 				null,
 				function(json) {
                     var Response = new JsonResponse(json);
@@ -158,10 +177,15 @@
                     if (Response.hasErrors()) {
                         Errors.showFromResponse(Response);
                     }
-                    
                     UserStorage.addLogins(Response.getField('users', {}));
                     appendOrdersList(Response.getField('orders', []));
                     
+					if (Response.getField('orders_more')) {
+						Html.removeClass(ordersListLoadMore, 'hidden');
+					} else {
+						Html.addClass(ordersListLoadMore, 'hidden');
+					}
+					
 					ordersListLoading = false;
 				},
 				function(xhr) {
@@ -170,11 +194,11 @@
 				});
 	};
 	
-	loadFeed(ordersMinTs);
+	loadFeed(ordersMinTs, ordersLastUserId, ordersLastOrderId);
     
     ordersListLoadMore.onclick = function() {
         if (!ordersListLoading) {
-            loadFeed(ordersMinTs);
+            loadFeed(ordersMinTs, ordersLastUserId, ordersLastOrderId);
         }
     };
 })();

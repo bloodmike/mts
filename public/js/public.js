@@ -75,46 +75,6 @@ function ajaxJson(method, url, parameters, callback, callbackFail) {
     return xhr;
 }
 
-/**
- * Удаляет у переданного элемента css-класс
- * 
- * @param {Element|null} element элемент
- * @param {string} className имя класса, которое требуется удалить
- * 
- * @returns {Element|null} переданный элемент
- */
-function elementRemoveClass(element, className) {
-	if (element !== null) {
-		var classNames = element.className.split(' ');
-		var newClassNames = [];
-		
-		for (var i in classNames) {
-			if (className !== classNames[i]) {
-				newClassNames.push(classNames[i]);
-			}
-		}
-		element.className = newClassNames.join(' ');
-	}
-	
-	return element;
-}
-
-/**
- * Добавляет переданному элементу css-класс
- * 
- * @param {Element|null} element элемент
- * @param {string} className имя класса, которое требуется добавить
- * 
- * @returns {Element|null} переданный элемент
- */
-function elementAddClass(element, className) {
-	if (element !== null) {
-		element.className += ' ' + className;
-	}
-	
-	return element;
-}
-
 var Html = {
     /**
      * Добавляет переданному элементу css-класс
@@ -198,7 +158,7 @@ var Errors = {
      */
     show: function(error) {
             var container = this.getContainer();
-            elementAddClass(container, 'visible');
+            Html.addClass(container, 'visible');
             container.innerHTML = error;
             if (this.__timeout !== null) {
                 clearTimeout(this.__timeout);
@@ -356,10 +316,10 @@ var JsonResponse = function(json) {
     
     for (var i in json) {
         if (json.hasOwnProperty(i) && i !== 'error') {
-            this.__fields = json[i];
+            this.__fields[i] = json[i];
         }
     }
-    
+	
     return this;
 };
 
