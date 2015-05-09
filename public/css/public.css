@@ -33,7 +33,15 @@ html {
 }
 
 .header-error {
-    display:none;
+	background: #f99;
+    border-radius: 0 0 3px 3px;
+	-moz-border-radius: 0 0 3px 3px;
+	-webkit-border-radius: 0 0 3px 3px;
+    color: #000;
+    display: none;
+    font-size: 13px;
+    left: 50px;
+    padding: 3px 10px;
     position: absolute;
 }
 
@@ -83,8 +91,24 @@ html {
 	float: right;
 }
 
-#header-balance {
+.header-balance {
+	color: #fff;
 	display: inline-block;
+	float: right;
+	font-weight: bold;
+	height: 50px;
+	line-height: 48px;
+	padding-right: 15px;
+}
+
+.header-balance:after {
+	color: #fff;
+	content: "Р";
+	display: inline-block;
+	height: 11px;
+	line-height: 18px;
+	border-bottom: 1px solid;
+	margin-left: 2px;
 }
 
 .panel {
@@ -149,12 +173,25 @@ html {
 
 /* Заказы */
 
-.order_finished {
-    background: #F9F6E7;
+.order.order_executing {
+	opacity: 0.6;
+}
+
+.order_executing .order__execute {
+	cursor: default;
+}
+
+.order.order_finished {
+    background: #F9F6E7 !important;
+	border: 1px solid #d4bc4c !important;
 }
 
 .order__execute {
     cursor: pointer;
+}
+
+.order_finished .order__owner {
+	color: #444;
 }
 
 .order_finished .order__execute {
@@ -206,6 +243,7 @@ html {
 	color: #3e638a;
 	float: left;
 	font-size: 16px;
+	line-height: 16px;
 	margin-bottom: 2px;
 }
 
@@ -213,10 +251,32 @@ html {
 	float: right;
 }
 
+.order__price:after {
+	color: #555;
+	content: "Р";
+	display: inline-block;
+	height: 11px;
+	line-height: 18px;
+	border-bottom: 1px solid;
+	margin-left: 2px;
+}
+
 .order__execute {
 	position: absolute;
-	bottom: 25px;
-	right: 25px;
+	background: #6383a8;
+	border-radius: 2px;
+	color: #fff;
+	cursor: pointer;
+	-moz-border-radius: 2px;
+	-webkit-border-radius: 2px;
+	bottom: 15px;
+	font-size: 13px;
+	right: 24px;
+	padding: 3px 13px 4px;
+}
+
+.order__execute:hover {
+	background: #678eb5;
 }
 
 .orders-list__load-more:hover {

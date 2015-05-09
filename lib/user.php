@@ -221,8 +221,8 @@ function loadListByIds($userIds) {
 	foreach ($hostIds as $userId => $hostId) {
 		if (!array_key_exists($hostId, $grouppedHostIds)) {
 			$grouppedHostIds[$hostId] = [];
-			$grouppedHostIds[$hostId][] = $userId;
 		}
+		$grouppedHostIds[$hostId][] = $userId;
 	}
 	
     $users = [];

@@ -20,7 +20,7 @@ const COMMISSION = 0.3;
  * @param double    $price сумма заказа
  * 
  * @return array массив с данными добавленного заказа:
- *                  order_id, ts, price
+ *                  id, ts, price
  * 
  * @throws Exception при ошибках подключения к базе
  */
@@ -70,7 +70,7 @@ function createOrder($price) {
         throw new Exception('Не удалось завершить транзакцию [' . $userId . ', ' . $orderId . ']');
     }
     
-    return $orderId;
+    return ['id' => $orderId, 'ts' => $time, 'price' => $price];
 }
 
 /**

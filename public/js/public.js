@@ -396,10 +396,13 @@ var Layout = {
      * @param {Number} balanceDelta величина, на которую нужно увеличить баланс
      */
     updateBalance: function(balanceDelta) {
-        if (balanceDelta > 0) {
+		if (balanceDelta > 0) {
             var block = this.getBalanceBlock();
             var balance = parseFloat(block.innerHTML);
-            block.innerHTML = (balance + balanceDelta).toString();
+			
+			var balanceString = Math.round(balance * 100).toString().replace(/([\d]{2})$/, '.$1');
+			
+            block.innerHTML = balanceString;
         }
     }
 }

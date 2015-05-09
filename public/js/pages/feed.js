@@ -73,6 +73,85 @@
 	 */
 	var ordersLastUserId = 0;
 	
+	/**
+	 * Создать html-блок для вывода заказа
+	 * 
+	 * @param {Object} order данные заказа
+	 * @param {Number} order.user_id ID заказчика
+	 * @param {Number} order.order_id ID заказа
+	 * @param {Number} order.price сумма заказа
+	 * 
+	 * @returns {Element} div с данными заказа
+	 */
+	var createOrderElement = function(order) {
+		var div = document.createElement('div');
+		div.className = 'order';
+		div.id = 'order-' + order['user_id'] + '-' + order['order_id'];
+
+		var divOwner = document.createElement('div');
+		divOwner.className = 'order__owner';
+		divOwner.title = 'Заказчик';
+
+		var login = UserStorage.getLogin(order['user_id']);
+		if (login === '') {
+			login = 'неизвестный';
+		}
+		divOwner.innerHTML = login;
+		div.appendChild(divOwner);
+
+		var divPrice = document.createElement('div');
+		divPrice.className = 'order__price';
+		divPrice.title = 'Сумма заказа';
+		divPrice.innerHTML = order['price'].toString();
+		div.appendChild(divPrice);
+
+		var divOrderId = document.createElement('div');
+		divOrderId.className = 'order__id';
+		divOrderId.title = 'ID заказа';
+		divOrderId.innerHTML = order['user_id'] + '-' + order['order_id'];
+		div.appendChild(divOrderId);
+
+		if (!UserStorage.isCurrent(order['user_id'])) {
+			var orderExecuting = false;
+		
+			var divExecute = document.createElement('div');
+			divExecute.className = 'order__execute';
+			divExecute.title = 'Выполнить заказ';
+			divExecute.innerHTML = 'Выполнить';
+			divExecute.onclick = function() {
+				if (orderExecuting) {
+					return;
+				}
+				Html.addClass(div, 'order_executing');
+				orderExecuting = true;
+				Actions.executeOrder(
+					order['user_id'], 
+					order['order_id'],
+					function(json) {
+						Html.removeClass(div, 'order_executing');
+						orderExecuting = false;
+						var Response = new JsonResponse(json);
+						if (Response.hasErrors()) {
+							if (Response.hasError(4)) {
+								div.parentNode.removeChild(div);
+							}
+							Errors.showFromResponse(Response);
+						} else {
+							Html.addClass(div, 'order_finished');
+							Layout.updateBalance(Response.getField('balanceDelta'));
+						}
+					},
+					function (xhr) {
+						Html.removeClass(div, 'order_executing');
+						orderExecuting = false;
+					}
+				);
+			};
+			div.appendChild(divExecute);
+		}
+		return div;
+	}
+	
     /**
      * Добавить в дайджест перечисленные заказы
      * 
@@ -82,62 +161,7 @@
 		
         for (var i in orders) {
             var order = orders[i];
-            
-            var div = document.createElement('div');
-            div.className = 'order';
-            div.id = 'order-' + order['user_id'] + '-' + order['order_id'];
-            
-            var divOwner = document.createElement('div');
-            divOwner.className = 'order__owner';
-            divOwner.title = 'Заказчик';
-            
-            var login = UserStorage.getLogin(order['user_id']);
-            if (login === '') {
-                login = 'неизвестный';
-            }
-            divOwner.innerHTML = login;
-            div.appendChild(divOwner);
-            
-            var divPrice = document.createElement('div');
-            divPrice.className = 'order__price';
-            divPrice.title = 'Сумма заказа';
-            divPrice.innerHTML = order['price'].toString() + '&#8381;';
-            div.appendChild(divPrice);
-            
-            var divOrderId = document.createElement('div');
-            divOrderId.className = 'order__id';
-            divOrderId.title = 'ID заказа';
-            divOrderId.innerHTML = order['user_id'] + '-' + order['order_id'];
-            div.appendChild(divOrderId);
-            
-            if (!UserStorage.isCurrent(order['user_id'])) {
-                var divExecute = document.createElement('div');
-                divExecute.className = 'order__execute';
-                divExecute.title = 'Выполнить заказ';
-                divExecute.innerHTML = 'Выполнить';
-                divExecute.onclick = function() {
-                    Actions.executeOrder(
-                        order['user_id'], 
-                        order['order_id'],
-                        function(json) {
-                            var Response = new JsonResponse(json);
-                            if (Response.hasErrors()) {
-                                if (Response.hasError(4)) {
-                                    div.parentNode.removeChild(div);
-                                }
-                                
-                                Errors.showFromResponse(Response);
-                            } else {
-                                Html.addClass(div, 'order_finished');
-                                Layout.updateBalance(Response.getField('balanceDelta'));
-                            }
-                        }
-                    );
-                };
-                div.appendChild(divExecute);
-            }
-            
-            ordersList.appendChild(div);
+            ordersList.appendChild(createOrderElement(order));
             ordersMinTs = order['ts'];
 			ordersLastOrderId = order['order_id'];
 			ordersLastUserId = order['user_id'];
