@@ -9,11 +9,6 @@
 	 * @type Number ID последнего загруженного заказа
 	 */
 	var maxOrderId = 0;
-	
-	/**
-	 * @type {Element} Список заказов на странице
-	 */
-	var ordersList = document.getElementById('orders-list');
     
 	/**
 	 * 
@@ -77,8 +72,6 @@
                 
                 statusCell.appendChild(spanUser);
             }
-            
-            
             
             maxOrderId = order['order_id'];
 		}

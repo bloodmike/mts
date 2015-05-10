@@ -120,7 +120,12 @@
 				);
 			};
 			div.appendChild(divExecute);
-		}
+		} else {
+            var divOwnerIsCurrent = document.createElement('div');
+            divOwnerIsCurrent.className = 'order__owner-is-current';
+            divOwnerIsCurrent.innerHTML = 'Это ваш заказ';
+            div.appendChild(divOwnerIsCurrent);
+        }
 		return div;
 	}
 	

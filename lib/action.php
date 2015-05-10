@@ -422,7 +422,7 @@ function addOrderToFinished($finishUserHostId, $finishUserId, $finishTs, $balanc
         $finishedLink = \Database\getConnectionOrFall($hostId);
         $result = mysqli_query(
                 $finishedLink, 
-                'INSERT INGORE INTO finished_orders(finished_user_id, finished_ts, income, user_id, order_id) '
+                'INSERT IGNORE INTO finished_orders(finished_user_id, finished_ts, income, user_id, order_id) '
                 . 'VALUES(' . $finishUserId . ', ' . $finishTs . ', ' . $balanceDelta . ', ' . $userId . ', ' . $orderId . ')');
         
         if ($result === false) {

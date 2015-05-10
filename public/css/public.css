@@ -253,7 +253,7 @@ html {
 
 .orders-table {
 	border-collapse: collapse;
-	width: 100%;
+    width: 100%;
 }
 
 .orders-table__id-column {
@@ -290,12 +290,19 @@ html {
     text-align: center;
 }
 
-.orders-table .status-active:hover td {
+.orders-table .status-active:hover td,
+.finished-orders-page .orders-table tbody tr:hover td {
     background: #f7f8fa;
 }
 
 .orders-table .status-finished td {
     background: #F9F6E7;
+}
+
+.my-orders-page,
+.finished-orders-page {
+    width: 650px;
+    margin: 0 auto;
 }
 
 /* Заказы */
@@ -350,10 +357,10 @@ html {
 	border: 1px solid #eef3fa;
 	box-sizing: border-box;
     float: left;
-    height: 80px;
-    padding: 15px 25px;
+    height: 72px;
+    padding: 8px 16px;
 	position: relative;
-    width: 50%;
+    width: 33%;
 }
 
 .order:hover {
@@ -421,14 +428,23 @@ html {
 	cursor: pointer;
 	-moz-border-radius: 2px;
 	-webkit-border-radius: 2px;
-	bottom: 15px;
+	bottom: 11px;
 	font-size: 13px;
-	right: 24px;
+	right: 16px;
 	padding: 3px 13px 4px;
 }
 
 .order__execute:hover {
 	background: #678eb5;
+}
+
+.order__owner-is-current {
+    position: absolute;
+    font-size: 13px;
+    font-style: italic;
+    opacity: 0.5;
+	bottom: 15px;
+    right: 16px;
 }
 
 .orders-list__load-more:hover {

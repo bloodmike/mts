@@ -255,4 +255,6 @@ function loadFinishedListForUser($userId, $maxFinishTs, $limit = 50) {
             $maxFinishTs = $finishedHostInfo['from_finished_ts'];
         }
     } while (count($orders) < $limit);
+    
+    return $orders;
 }
