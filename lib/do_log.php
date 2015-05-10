@@ -113,5 +113,5 @@ function appendUpdateUserBalance($userId, $balanceDelta) {
  * @return bool удалось ли внести запись в лог
  */
 function appendAddToFinished($finishUserId, $finishTs, $balanceDelta, $userId, $orderId) {
-    return writeRecord(ADD_ORDER_TO_DIGEST, [$finishUserId, $finishTs, $balanceDelta, $userId, $orderId]);
+    return writeRecord(ADD_ORDER_TO_FINISHED, [$finishUserId, $finishTs, $balanceDelta, $userId, $orderId]);
 }

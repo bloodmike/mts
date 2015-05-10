@@ -20,6 +20,7 @@ require_once(__DIR__ . '/user.php');
 require_once(__DIR__ . '/auth.php');
 require_once(__DIR__ . '/order.php');
 require_once(__DIR__ . '/order_digest.php');
+require_once(__DIR__ . '/do_log.php');
 require_once(__DIR__ . '/action.php');
 require_once(__DIR__ . '/response.php');
 

@@ -120,7 +120,7 @@ function closeConnection($hostId) {
 function fetchOne(mysqli $link, $query) {
     $result = mysqli_query($link, $query);
     if ($result === false) {
-        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
     } elseif ($result->num_rows == 0) {
         return null;
     }
@@ -145,7 +145,7 @@ function fetchAll(mysqli $link, $query, $throwOnError = true) {
     $rows = [];
     if ($result === false) {
         if ($throwOnError) {
-            throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+            throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
         }
     } else {
         while ($row = mysqli_fetch_assoc($result)) {
@@ -169,7 +169,7 @@ function fetchPairs($link, $query) {
     
     $rows = [];
     if ($result === false) {
-		throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+		throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
     } else {
         while ($row = mysqli_fetch_row($result)) {
             $rows[$row[0]] = $row[1];
@@ -190,7 +190,7 @@ function fetchPairs($link, $query) {
 function fetchRow(mysqli $link, $query) {
     $result = mysqli_query($link, $query);
     if ($result === false) {
-        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
     } elseif (mysqli_num_rows($result) == 0) {
         return null;
     }
@@ -211,7 +211,7 @@ function fetchRow(mysqli $link, $query) {
 function fetchSingle(mysqli $link, $query) {
     $result = mysqli_query($link, $query);
     if ($result === false) {
-        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link));
+        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
     }
     
     $values = [];
