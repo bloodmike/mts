@@ -70,7 +70,11 @@ function createOrder($price) {
         throw new Exception('Не удалось завершить транзакцию [' . $userId . ', ' . $orderId . ']');
     }
     
-    return ['id' => $orderId, 'ts' => $time, 'price' => $price];
+    return [
+		'id'	=> $orderId, 
+		'ts'	=> $time, 
+		'price' => number_format($price, 2, '.', '')
+	];
 }
 
 /**

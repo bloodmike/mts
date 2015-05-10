@@ -404,5 +404,81 @@ var Layout = {
 			
             block.innerHTML = balanceString;
         }
-    }
+    },
+	
+	/**
+	 * Вешает события, связанные с диалогом добавления заказа.
+	 */
+	setUpAddOrderDialog: function() {
+		var divDialog = document.getElementById('add-order-dialog');
+		if (divDialog === null) {
+			return;
+		}
+		divDialog.onclick = function() {
+			Html.addClass(divDialog, 'hidden');
+		};
+		
+		document.getElementById('header-menu__open-dialog').onclick = function() {
+			Html.removeClass(divDialog, 'hidden');
+		};
+		
+		document.getElementById('add-order-dialog__content').onclick = function(event) {
+			event.stopPropagation();
+		};
+		
+		var addOrderErrorMessage = document.getElementById('add-order-error-message');
+	
+		var priceInput = document.getElementById('add-order-form__price');
+
+		/**
+		 * @param {Event} event
+		 */
+		var addOrderFormListener = function(event) {
+			event.preventDefault();
+			var price = parseFloat(priceInput.value);
+			if (!isNaN(price) && price >= 0.00) {
+				Html.removeClass(priceInput, 'error-box');
+				Html.removeClass(addOrderErrorMessage, 'error-visible');
+				Actions.createOrder(
+						price, 
+						function(json) {
+							var Response = new JsonResponse(json);
+							if (Response.hasErrors()) {
+								addOrderErrorMessage.innerHTML = '';
+								Html.addClass(addOrderErrorMessage, 'error-visible');
+
+								var errors = Response.getErrors();
+								for (var i in errors) {
+									var div = document.createElement('div');
+									div.innerHTML = Errors.code2error(errors[i]);
+									addOrderErrorMessage.appendChild(div);
+								}
+							} else {
+								priceInput.value = '';
+								for (var i in Layout.orderAddedListeners) {
+									Layout.orderAddedListeners[i]({
+										order_id:	json.order.id,
+										price:		json.order.price,
+										ts:			json.order.ts
+									});
+								}
+							}
+						},
+						function(xhr) {
+							console.log(xhr);
+						});
+			} else {
+				Html.addClass(priceInput, 'error-box');
+			}
+		};
+
+		document.getElementById('add-order-form').onsubmit = addOrderFormListener;
+	},
+	
+	/**
+	 * @type Function[] коллбэки, вызываемые при добавлении заказа через диалог
+	 */
+	orderAddedListeners: []
 }
+
+Layout.setUpAddOrderDialog();

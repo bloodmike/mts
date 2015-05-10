@@ -6,50 +6,13 @@
 
 (function() {
 	
-	var addOrderErrorMessage = document.getElementById('add-order-error-message');
-	
-	var priceInput = document.getElementById('add-order-form__price');
-	
 	/**
-	 * @param {Event} event
+	 * @type {Element} Список заказов на странице
 	 */
-	var addOrderFormListener = function(event) {
-		event.preventDefault();
-		var price = parseFloat(priceInput.value);
-		if (!isNaN(price) && price >= 0.00) {
-			Html.removeClass(addOrderErrorMessage, 'error-visible');
-			Actions.createOrder(
-					price, 
-					function(json) {
-                        var Response = new JsonResponse(json);
-						if (Response.hasErrors()) {
-							addOrderErrorMessage.innerHTML = '';
-							Html.addClass(addOrderErrorMessage, 'error-visible');
-                            
-                            var errors = Response.getErrors();
-							for (var i in errors) {
-								var div = document.createElement('div');
-								div.innerHTML = Errors.code2error(errors[i]);
-								addOrderErrorMessage.appendChild(div);
-							}
-						} else {
-							alert('Добавлены');
-						}
-					},
-					function(xhr) {
-						console.log(xhr);
-					});
-		} else {
-			Html.addClass(priceInput, 'error-box');
-		}
-	};
-	
-	document.getElementById('add-order-form').onsubmit = addOrderFormListener;
-	
 	var ordersList = document.getElementById('orders-list');
     
 	/**
-     * @type {Element}
+     * @type {Element} Кнопка "Загрузить еще" внизу списка заказов
      */
     var ordersListLoadMore = document.getElementById('orders-list__load-more');
     
@@ -225,4 +188,18 @@
             loadFeed(ordersMinTs, ordersLastUserId, ordersLastOrderId);
         }
     };
+	
+	Layout.orderAddedListeners.push(function(order) {
+		var orderDiv = createOrderElement({
+			user_id:	currentUser.id,
+			order_id:	order.order_id,
+			price:		order.price
+		});
+
+		ordersList.insertBefore(orderDiv, ordersList.firstChild);
+		Html.addClass(orderDiv, 'order_new');
+		setTimeout(function() {
+			Html.removeClass(orderDiv, 'order_new');
+		}, 2000);
+	});
 })();

@@ -62,7 +62,8 @@ html {
     padding-right: 15px;
 }
 
-#header a {
+#header a,
+.header-menu__open-dialog {
 	color: #fff;
 	display: inline-block;
 	line-height: 48px;
@@ -74,17 +75,24 @@ html {
 #header-menu {
 	display:inline-block;
 	float: right;
-    width: 640px;
+    width: 700px;
 }
 
-#header-menu a {	
+#header-menu a,
+.header-menu__open-dialog {	
 	padding: 0 15px;
 	float:left;
 }
 
 #header a:hover,
-#header a.selected {
+#header a.selected,
+.header-menu__open-dialog:hover {
 	background-color: #51759b;
+}
+
+.header-menu__open-dialog {
+	cursor: pointer;
+	text-decoration: underline;
 }
 
 #header-menu #header-menu__logout {
@@ -125,6 +133,41 @@ html {
 
 .error-box {
 	box-shadow: 0 0 3px 5px rgba(127, 0, 0, 0.5);
+}
+
+/* форма добавления заказа */
+.add-order-dialog {
+	background: rgba(0, 0, 0, 0.5);
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 10;
+}
+
+.add-order-dialog.hidden {
+	display: none;
+}
+
+.add-order-dialog__content {
+	width: 375px;
+	margin: 100px auto 0;
+}
+
+.add-order-form {
+	text-align: center;
+}
+
+.ruble {
+	color: #555;
+	content: "Р";
+	display: inline-block;
+	height: 11px;
+	line-height: 18px;
+	border-bottom: 1px solid;
+	margin-left: 2px;
+	margin-right: 12px;
 }
 
 /* авторизация */ 
@@ -172,6 +215,11 @@ html {
 }
 
 /* Заказы */
+
+.order.order_new {
+	background: #cec !important;
+	border-color: #cec !important;
+}
 
 .order.order_executing {
 	opacity: 0.6;
@@ -259,6 +307,22 @@ html {
 	line-height: 18px;
 	border-bottom: 1px solid;
 	margin-left: 2px;
+}
+
+.btn {
+	background: #6383a8;
+	border-radius: 2px;
+	border: 0px none;
+	color: #fff;
+	cursor: pointer;
+	-moz-border-radius: 2px;
+	-webkit-border-radius: 2px;
+	font-size: 13px;
+	padding: 3px 13px 4px;
+}
+
+.btn:hover {
+	background: #678eb5;
 }
 
 .order__execute {
