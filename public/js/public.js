@@ -426,6 +426,8 @@ var Layout = {
 		};
 		
 		var addOrderErrorMessage = document.getElementById('add-order-error-message');
+        
+        var addOrderSuccessMessage = document.getElementById('add-order-success-message');
 	
 		var priceInput = document.getElementById('add-order-form__price');
 
@@ -438,6 +440,7 @@ var Layout = {
 			if (!isNaN(price) && price >= 0.00) {
 				Html.removeClass(priceInput, 'error-box');
 				Html.removeClass(addOrderErrorMessage, 'error-visible');
+				Html.removeClass(addOrderSuccessMessage, 'success-visible');
 				Actions.createOrder(
 						price, 
 						function(json) {
@@ -455,6 +458,12 @@ var Layout = {
 							} else {
 								priceInput.value = '';
 								priceInput.focus();
+                                
+                                Html.addClass(addOrderSuccessMessage, 'success-visible');
+                                setTimeout(function() {
+                                    Html.removeClass(addOrderSuccessMessage, 'success-visible');
+                                }, 1500);
+                                
 								for (var i in Layout.orderAddedListeners) {
 									Layout.orderAddedListeners[i]({
 										order_id:	json.order.id,

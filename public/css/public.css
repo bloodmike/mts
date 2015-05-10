@@ -181,6 +181,20 @@ html {
 	margin-right: 12px;
 }
 
+.success-message {
+	display: none;
+	line-height: 20px;
+	margin-bottom: 25px;
+	background: #cec;
+	color: #333;
+	padding: 10px 25px;
+    text-align: center;
+}
+
+.success-message.success-visible {
+	display: block;
+}
+
 /* авторизация */ 
 
 .error-message {
@@ -288,6 +302,10 @@ html {
     font-size: 11px;
     color: #333;
     text-align: center;
+}
+
+.orders-table .order-new td {
+    background: #cec;
 }
 
 .orders-table .status-active:hover td,
