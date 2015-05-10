@@ -160,12 +160,15 @@ html {
 }
 
 .ruble {
-	color: #555;
 	content: "Р";
 	display: inline-block;
 	height: 11px;
 	line-height: 18px;
 	border-bottom: 1px solid;
+}
+
+.add-order-form .ruble {
+	color: #555;
 	margin-left: 2px;
 	margin-right: 12px;
 }
@@ -212,6 +215,60 @@ html {
 
 .login-form__submit-row {
 	padding-left: 140px;
+}
+
+/* Мои заказы */
+
+.my-orders-page__filter {
+	margin-bottom: 15px;
+}
+
+.my-orders-page__filter a {
+	margin-right: 20px;
+	margin-left: -5px;
+	padding: 3px 13px;
+	border-radius: 8px;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	color: #486a90;
+	text-decoration: none;
+}
+
+.my-orders-page__filter a:hover {
+	background: #eff1f3;
+}
+
+.my-orders-page__filter a.selected {
+	background: #486a90;
+	color: #fff;
+}
+
+.orders-table {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+.orders-table__id-column {
+	width: 100px;
+}
+
+.orders-table__date-column {
+	width: 150px;
+}
+
+.orders-table__price-column {
+	width: 150px;
+}
+
+.orders-table th {
+	background: #e9edf1;
+	border: 1px solid #e9edf1;
+	color: #486a90;
+}
+
+.orders-table th, 
+.orders-table td {
+	border: 1px solid #eef3fa;
 }
 
 /* Заказы */
@@ -293,6 +350,10 @@ html {
 	font-size: 16px;
 	line-height: 16px;
 	margin-bottom: 2px;
+}
+
+.order__owner.order__owner_long {
+	font-size: 14px;
 }
 
 .order__price {

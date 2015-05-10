@@ -112,8 +112,8 @@ function fetchHostId(\mysqli $link, $userId, $orderId) {
             $link, 
             'SELECT host_id '
             . 'FROM users_orders_shards '
-            . 'WHERE user_id=' . $userId . ' AND order_id <= ' . $orderId . ' '
-            . 'ORDER BY order_id DESC LIMIT 1');
+            . 'WHERE user_id=' . $userId . ' AND from_order_id <= ' . $orderId . ' '
+            . 'ORDER BY from_order_id DESC LIMIT 1');
 }
 
 /**
@@ -129,8 +129,8 @@ function fetchHostInfo(\mysqli $link, $userId, $orderId) {
             $link, 
             'SELECT host_id, from_order_id '
             . 'FROM users_orders_shards '
-            . 'WHERE user_id=' . $userId . ' AND order_id <= ' . $orderId . ' '
-            . 'ORDER BY order_id DESC LIMIT 1');
+            . 'WHERE user_id=' . $userId . ' AND from_order_id <= ' . $orderId . ' '
+            . 'ORDER BY from_order_id DESC LIMIT 1');
 }
 
 /**
@@ -168,7 +168,7 @@ function loadListForUser($userId, $status = LOAD_USER_ORDERS_ALL, $maxOrderId = 
 			return [];
 		}
 		
-        $link = Database\getConnection($hostInfo['host_id']);
+        $link = \Database\getConnection($hostInfo['host_id']);
         if ($link === false) {
             throw new Exception('Не удалось подключиться к хосту [' . $hostInfo['host_id'] . ']');
         }
@@ -186,7 +186,7 @@ function loadListForUser($userId, $status = LOAD_USER_ORDERS_ALL, $maxOrderId = 
         }
         
         // получаем строки из базы
-        $rows = Database\fetchAll(
+        $rows = \Database\fetchAll(
                 $link, 
                 'SELECT order_id, ts, price, finished_user_id '
                 . 'FROM users_orders '

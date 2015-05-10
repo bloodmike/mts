@@ -59,6 +59,11 @@
 		if (login === '') {
 			login = 'неизвестный';
 		}
+		
+		if (login.length >= 15) {
+			divOwner.className += ' order__owner_long';
+		}
+		
 		divOwner.innerHTML = login;
 		div.appendChild(divOwner);
 
@@ -101,7 +106,11 @@
 							Errors.showFromResponse(Response);
 						} else {
 							Html.addClass(div, 'order_finished');
-							Layout.updateBalance(Response.getField('balanceDelta'));
+							Layout.updateBalance(parseFloat(Response.getField('balanceDelta')));
+							
+							setTimeout(function() {
+								div.parentNode.removeChild(div);
+							}, 1000);
 						}
 					},
 					function (xhr) {

@@ -202,7 +202,7 @@ function executeOrder($userId, $orderId) {
  * @throws Exception при ошибках в работе с базой
  */
 function executeOrderSingleHost($hostId, $executeUserId, $userId, $orderId) {
-    $link = Database\getConnectionOrFall($hostId);
+    $link = \Database\getConnectionOrFall($hostId);
     if (!mysqli_begin_transaction($link)) {
         throw new Exception('Невозможно начать транзакцию на хосте [' . $hostId . ']: ' . mysqli_error($link));
     }
@@ -223,7 +223,7 @@ function executeOrderSingleHost($hostId, $executeUserId, $userId, $orderId) {
     }
     
     $orderData = mysqli_fetch_assoc($orderResult);
-    mysqli_free_result($orderData);
+    mysqli_free_result($orderResult);
     
     $finishTs = time();
     
@@ -241,7 +241,7 @@ function executeOrderSingleHost($hostId, $executeUserId, $userId, $orderId) {
         return null;
     }
     
-    $balanceDelta = number_format($orderData['price'] * COMMISSION, 2, '.', '');
+    $balanceDelta = number_format($orderData['price'] * (1 - COMMISSION), 2, '.', '');
     
     if ($balanceDelta != '0.00') {
         $userUpdateResult = mysqli_query($link, 'UPDATE users SET balance=balance + ' . $balanceDelta . ' WHERE id=' . $executeUserId . ' LIMIT 1');
@@ -285,7 +285,7 @@ function executeOrderSingleHost($hostId, $executeUserId, $userId, $orderId) {
  * @throws Exception при ошибках в работе с базой
  */
 function executeOrderMultiHost($executeUserHostId, $orderHostId, $executeUserId, $userId, $orderId) {
-    $orderLink = Database\getConnectionOrFall($orderHostId);
+    $orderLink = \Database\getConnectionOrFall($orderHostId);
     if (!mysqli_begin_transaction($orderLink)) {
         throw new Exception('Невозможно начать транзакцию на хосте [' . $orderHostId . ']: ' . mysqli_error($orderLink));
     }
@@ -330,7 +330,7 @@ function executeOrderMultiHost($executeUserHostId, $orderHostId, $executeUserId,
     }
     
     
-    $balanceDelta = number_format($orderData['price'] * COMMISSION, 2, '.', '');
+    $balanceDelta = number_format($orderData['price'] * (1 - COMMISSION), 2, '.', '');
     if ($balanceDelta != '0.00') {
         // если нужно обновить баланс пользователя
         if (!updateUserBalance($executeUserHostId, $executeUserId, $balanceDelta)) {

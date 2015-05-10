@@ -398,8 +398,7 @@ var Layout = {
     updateBalance: function(balanceDelta) {
 		if (balanceDelta > 0) {
             var block = this.getBalanceBlock();
-            var balance = parseFloat(block.innerHTML);
-			
+            var balance = parseFloat(block.innerHTML) + balanceDelta;
 			var balanceString = Math.round(balance * 100).toString().replace(/([\d]{2})$/, '.$1');
 			
             block.innerHTML = balanceString;
@@ -455,6 +454,7 @@ var Layout = {
 								}
 							} else {
 								priceInput.value = '';
+								priceInput.focus();
 								for (var i in Layout.orderAddedListeners) {
 									Layout.orderAddedListeners[i]({
 										order_id:	json.order.id,
