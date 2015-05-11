@@ -436,8 +436,8 @@ var Layout = {
 		 */
 		var addOrderFormListener = function(event) {
 			event.preventDefault();
-			var price = parseFloat(priceInput.value);
-			if (!isNaN(price) && price >= 0.00) {
+			var price = parseFloat(priceInput.value.replace(/[ ]/g, ''));
+			if (!isNaN(price) && price >= 0.00 && price <= 1000000) {
 				Html.removeClass(priceInput, 'error-box');
 				Html.removeClass(addOrderErrorMessage, 'error-visible');
 				Html.removeClass(addOrderSuccessMessage, 'success-visible');

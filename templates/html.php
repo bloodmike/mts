@@ -45,11 +45,12 @@
 			<div id="add-order-dialog__content" class="add-order-dialog__content" title="">
 				<div class="panel panel-container">
 					<form id="add-order-form" class="add-order-form">
-						Сумма: <input type="text" id="add-order-form__price" value="" placeholder="100.00" style="width: 70px; text-align: right;"/>
+						Сумма: <input type="text" id="add-order-form__price" value="" class="add-order-form__price" />
 						<span class="ruble">Р</span>
 						
 						<input type="submit" class="btn" value="Добавить заказ"/>
 					</form>    
+                    <div class="add-order-form__note">Сумма заказа должна быть в диапазоне 0 - 1000000.00 руб.</div>
 				</div>
                 
                 <div id="add-order-error-message" class="error-message"></div>

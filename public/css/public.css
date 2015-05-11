@@ -167,6 +167,17 @@ html {
 	text-align: center;
 }
 
+.add-order-form__price {
+    width: 80px; 
+    text-align: right;
+}
+
+.add-order-form__note {
+    margin-top: 12px;
+    font-size: 11px;
+    opacity: 0.5;
+}
+
 .ruble {
 	content: "Р";
 	display: inline-block;
