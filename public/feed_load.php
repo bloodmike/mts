@@ -22,7 +22,7 @@ function loadDigest() {
 		$ignoreUserId = (int) filter_input(INPUT_GET, 'last_user_id', FILTER_SANITIZE_NUMBER_INT);
 		$ignoreOrderId = (int) filter_input(INPUT_GET, 'last_order_id', FILTER_SANITIZE_NUMBER_INT);
 		
-		$limit = 3;		
+		$limit = DIGEST_FEED_LIMIT;		
         $response['orders'] = \Digest\loadOrders($limit, $ts, $ignoreUserId, $ignoreOrderId);
 		$response['orders_more'] = (count($response['orders']) >= $limit);
 		

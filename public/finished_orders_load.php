@@ -24,7 +24,7 @@ function loadFinishedOrders() {
             $maxTs = time() + 1;
         }
         
-        $limit = 2;
+        $limit = FINISHED_ORDERS_LOAD_LIMIT;
         
         $orders = \Order\loadFinishedListForUser($user['id'], $maxTs, $limit);
         

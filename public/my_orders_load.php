@@ -28,7 +28,7 @@ function loadOrders() {
 			$maxOrderId = null;
 		}
 		
-        $limit = 5;
+        $limit = MY_ORDERS_LOAD_LIMIT;
         
 		$response['orders'] = \Order\loadListForUser(\Auth\getCurrentUserId(), $status, $maxOrderId, $limit);
         $response['orders_more'] = (count($response['orders']) == $limit);
