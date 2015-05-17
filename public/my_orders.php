@@ -45,12 +45,9 @@ function htmlContent() {
 				<th>Статус</th>
 			</tr>
 		</thead>
-		<tbody>
-			
-		</tbody>
+		<tbody></tbody>
 	</table>
 	
-	<div class="orders-list" id="orders-list"></div>
 	<div class="orders-list__load-more hidden" id="orders-list__load-more">
 		<span>Загрузить еще</span>
 	</div>

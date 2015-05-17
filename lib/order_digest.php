@@ -139,12 +139,12 @@ function mergeSortOrders($shardOrders, $limit) {
                     ($maxOrderTsKey === null || 
                     current($shardOrders[$maxOrderTsKey])['ts'] < current($orders)['ts'])) {
                 
-                $minOrderTsKey = $key;
+                $maxOrderTsKey = $key;
                 $allEmpty = false;
             }
         }
         
-        if ($minOrderTsKey !== null) {
+        if ($maxOrderTsKey !== null) {
             $result[] = current($shardOrders[$maxOrderTsKey]);
             next($shardOrders[$maxOrderTsKey]);
         }

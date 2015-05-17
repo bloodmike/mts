@@ -50,6 +50,8 @@ function createOrder($price) {
             . 'order_id=' . $orderId . ', '
             . 'ts=' . $time . ', '
             . 'finished=0, '
+            . 'finished_user_id=0, '
+            . 'finished_ts=0, '
             . 'price=' . $price);
     
     if ($result === false) {
@@ -306,14 +308,14 @@ function executeOrderMultiHost($executeUserHostId, $orderHostId, $executeUserId,
     }
     
     $orderData = mysqli_fetch_assoc($orderResult);
-    mysqli_free_result($orderData);
+    mysqli_free_result($orderResult);
     
     $finishTs = time();
     
     $orderUpdateResult = mysqli_query($orderLink, 
             'UPDATE users_orders '
             . 'SET finished=1, finished_user_id=' . $executeUserId . ', finished_ts=' . $finishTs . ' '
-            . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND status=0 '
+            . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND finished=0 '
             . 'LIMIT 1');
     
     if ($orderUpdateResult === false) {
@@ -420,7 +422,7 @@ function addOrderToFinished($finishUserHostId, $finishUserId, $finishTs, $balanc
         $finishedLink = \Database\getConnectionOrFall($hostId);
         $result = mysqli_query(
                 $finishedLink, 
-                'INSERT INGORE INTO finished_orders(finished_user_id, finished_ts, income, user_id, order_id) '
+                'INSERT IGNORE INTO finished_orders(finished_user_id, finished_ts, income, user_id, order_id) '
                 . 'VALUES(' . $finishUserId . ', ' . $finishTs . ', ' . $balanceDelta . ', ' . $userId . ', ' . $orderId . ')');
         
         if ($result === false) {

@@ -426,6 +426,8 @@ var Layout = {
 		};
 		
 		var addOrderErrorMessage = document.getElementById('add-order-error-message');
+        
+        var addOrderSuccessMessage = document.getElementById('add-order-success-message');
 	
 		var priceInput = document.getElementById('add-order-form__price');
 
@@ -434,10 +436,11 @@ var Layout = {
 		 */
 		var addOrderFormListener = function(event) {
 			event.preventDefault();
-			var price = parseFloat(priceInput.value);
-			if (!isNaN(price) && price >= 0.00) {
+			var price = parseFloat(priceInput.value.replace(/[ ]/g, ''));
+			if (!isNaN(price) && price >= 0.00 && price <= 1000000) {
 				Html.removeClass(priceInput, 'error-box');
 				Html.removeClass(addOrderErrorMessage, 'error-visible');
+				Html.removeClass(addOrderSuccessMessage, 'success-visible');
 				Actions.createOrder(
 						price, 
 						function(json) {
@@ -455,6 +458,12 @@ var Layout = {
 							} else {
 								priceInput.value = '';
 								priceInput.focus();
+                                
+                                Html.addClass(addOrderSuccessMessage, 'success-visible');
+                                setTimeout(function() {
+                                    Html.removeClass(addOrderSuccessMessage, 'success-visible');
+                                }, 1500);
+                                
 								for (var i in Layout.orderAddedListeners) {
 									Layout.orderAddedListeners[i]({
 										order_id:	json.order.id,
@@ -481,4 +490,73 @@ var Layout = {
 	orderAddedListeners: []
 }
 
+/**
+ * 
+ * @type Object функции для работы с датами / временем
+ */
+var DateProc = {
+    /**
+     * @type Number миллисекунд в сутках
+     */
+    TIME_DAY: 86400000,
+    
+    /**
+     * @param {Number} num номер дня / месяца
+     * 
+     * @returns {String} указанное число с проставленным нулём слева (если требуется)
+     */
+    padNumber: function(num) {
+        return (num < 10 ? '0' : '') + num.toString();
+    },
+    
+    /**
+     * @param {Number} timestamp unix-время (в секундах)
+     * 
+     * @returns {String} дата-время, в формате d.m.Y H:i
+     */
+    dateTime: function(timestamp) {
+        var date = new Date(timestamp * 1000);
+        var dateStr = this.padNumber(date.getDate()) + '.' + this.padNumber(date.getMonth() + 1) + '.' + date.getFullYear();
+        
+        var timeStr = this.padNumber(date.getHours()) + ':'+ this.padNumber(date.getMinutes());
+        
+        return dateStr + ' ' + timeStr;
+    },
+    
+    /**
+     * @param {Number} timestamp unix-время (в секундах)
+     * 
+     * @returns {String} дата-время в минималистичном формате: 
+     *                  сегодняшние - только время, 
+     *                  вчерашние - дата/время,
+     *                  остальные - дата
+     */
+    shortDateTime: function(timestamp) {
+        var timestampMs = timestamp * 1000;
+        var date = new Date(timestampMs);
+        
+        var dayDiff = this.getDayDiff(timestampMs, (new Date()).getTime());
+        
+        if (dayDiff === 0) {
+            return this.padNumber(date.getHours()) + ':'+ this.padNumber(date.getMinutes()) + ':' + this.padNumber(date.getSeconds());
+        } else if (dayDiff === 1) {
+            return this.dateTime(timestamp);
+        }
+        
+        return this.padNumber(date.getDate()) + '.' + this.padNumber(date.getMonth() + 1) + '.' + date.getFullYear();
+    },
+    
+    /**
+     * @param {Number} timestampFrom меньшее unix-время (в миллисекундах)
+     * @param {Number} timestampTo большее unix-время (в миллисекундах)
+     * 
+     * @returns {Number} разница в днях между указанными отметками времени
+     */
+    getDayDiff: function(timestampFrom, timestampTo) {
+        return Math.floor(timestampTo / this.TIME_DAY) - Math.floor(timestampFrom / this.TIME_DAY);
+    }
+    
+};
+
+/* Инициализируем страницу */
 Layout.setUpAddOrderDialog();

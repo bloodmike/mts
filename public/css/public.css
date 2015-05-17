@@ -14,6 +14,14 @@ html {
 	background: #f0f2f5;
 }
 
+.c {
+    text-align: center;
+}
+
+.r {
+    text-align: right;
+}
+
 #body {
 	width: 990px;
 	margin: 50px auto 0;
@@ -159,6 +167,17 @@ html {
 	text-align: center;
 }
 
+.add-order-form__price {
+    width: 80px; 
+    text-align: right;
+}
+
+.add-order-form__note {
+    margin-top: 12px;
+    font-size: 11px;
+    opacity: 0.5;
+}
+
 .ruble {
 	content: "Р";
 	display: inline-block;
@@ -171,6 +190,20 @@ html {
 	color: #555;
 	margin-left: 2px;
 	margin-right: 12px;
+}
+
+.success-message {
+	display: none;
+	line-height: 20px;
+	margin-bottom: 25px;
+	background: #cec;
+	color: #333;
+	padding: 10px 25px;
+    text-align: center;
+}
+
+.success-message.success-visible {
+	display: block;
 }
 
 /* авторизация */ 
@@ -245,7 +278,7 @@ html {
 
 .orders-table {
 	border-collapse: collapse;
-	width: 100%;
+    width: 100%;
 }
 
 .orders-table__id-column {
@@ -257,18 +290,48 @@ html {
 }
 
 .orders-table__price-column {
-	width: 150px;
+	width: 110px;
 }
 
 .orders-table th {
 	background: #e9edf1;
 	border: 1px solid #e9edf1;
 	color: #486a90;
+    padding: 2px 0;
 }
 
 .orders-table th, 
 .orders-table td {
 	border: 1px solid #eef3fa;
+}
+
+.orders-table td {
+    padding: 2px 6px;
+}
+
+.orders-table .cell-id {
+    font-size: 11px;
+    color: #333;
+    text-align: center;
+}
+
+.orders-table .order-new td {
+    background: #cec;
+}
+
+.orders-table .status-active:hover td,
+.finished-orders-page .orders-table tbody tr:hover td {
+    background: #f7f8fa;
+}
+
+.orders-table .status-finished td {
+    background: #F9F6E7;
+}
+
+.my-orders-page,
+.finished-orders-page {
+    width: 650px;
+    margin: 0 auto;
 }
 
 /* Заказы */
@@ -323,10 +386,10 @@ html {
 	border: 1px solid #eef3fa;
 	box-sizing: border-box;
     float: left;
-    height: 80px;
-    padding: 15px 25px;
+    height: 72px;
+    padding: 8px 16px;
 	position: relative;
-    width: 50%;
+    width: 33%;
 }
 
 .order:hover {
@@ -394,14 +457,23 @@ html {
 	cursor: pointer;
 	-moz-border-radius: 2px;
 	-webkit-border-radius: 2px;
-	bottom: 15px;
+	bottom: 11px;
 	font-size: 13px;
-	right: 24px;
+	right: 16px;
 	padding: 3px 13px 4px;
 }
 
 .order__execute:hover {
 	background: #678eb5;
+}
+
+.order__owner-is-current {
+    position: absolute;
+    font-size: 13px;
+    font-style: italic;
+    opacity: 0.5;
+	bottom: 15px;
+    right: 16px;
 }
 
 .orders-list__load-more:hover {

@@ -28,7 +28,10 @@ function loadOrders() {
 			$maxOrderId = null;
 		}
 		
-		$response['orders'] = \Order\loadListForUser(\Auth\getCurrentUserId(), $status, $maxOrderId);
+        $limit = MY_ORDERS_LOAD_LIMIT;
+        
+		$response['orders'] = \Order\loadListForUser(\Auth\getCurrentUserId(), $status, $maxOrderId, $limit);
+        $response['orders_more'] = (count($response['orders']) == $limit);
         
         $finishedUserIdsMap = [];
         foreach ($response['orders'] as $order) {

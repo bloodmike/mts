@@ -25,7 +25,7 @@ function addOrder() {
         }
         
         $price = (float)filter_input(INPUT_POST, 'price');
-        if ($price < 0) {
+        if ($price < 0 || $price > 1000000) {
             return \Response\jsonAddError($response, \Error\INCORRECT_ORDER_PRICE);
         }
         

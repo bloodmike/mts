@@ -24,9 +24,12 @@ function loadFinishedOrders() {
             $maxTs = time() + 1;
         }
         
-        $orders = \Order\loadFinishedListForUser($user['id'], $maxTs);
+        $limit = FINISHED_ORDERS_LOAD_LIMIT;
+        
+        $orders = \Order\loadFinishedListForUser($user['id'], $maxTs, $limit);
         
         $response['orders'] = $orders;
+        $response['orders_more'] = (count($orders) >= $limit);
         
         $userIdsMap = [];
         

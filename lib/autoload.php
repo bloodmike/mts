@@ -24,6 +24,18 @@ require_once(__DIR__ . '/do_log.php');
 require_once(__DIR__ . '/action.php');
 require_once(__DIR__ . '/response.php');
 
+// можно определить эти константы в конфиге
+if (!defined('DIGEST_FEED_LIMIT')) {
+    define('DIGEST_FEED_LIMIT', 12);
+}
+
+if (!defined('MY_ORDERS_LOAD_LIMIT')) {
+    define('MY_ORDERS_LOAD_LIMIT', 10);
+}
+
+if (!defined('FINISHED_ORDERS_LOAD_LIMIT')) {
+    define('FINISHED_ORDERS_LOAD_LIMIT', 10);
+}
 
 // регистрируем функцию, вызываемую после выполнения скрипта
 register_shutdown_function(function() {

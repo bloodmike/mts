@@ -7,7 +7,6 @@
 namespace Order;
 
 use Exception;
-use mysqli;
 
 /**
  * Загружать все заказы пользователя
@@ -74,7 +73,11 @@ function loadHostInfoForNewOrder($userId) {
 function fetchHostInfoForNewOrder(\mysqli $link, $userId) {
     return \Database\fetchRow(
             $link, 
-            'SELECT host_id, from_order_id FROM users_orders_shards WHERE user_id=' . $userId . ' ORDER BY from_order_id DESC LIMIT 1');
+            'SELECT host_id, from_order_id '
+            . 'FROM users_orders_shards '
+            . 'WHERE user_id=' . $userId . ' '
+            . 'ORDER BY from_order_id DESC '
+            . 'LIMIT 1');
 }
 
 /**
@@ -113,7 +116,8 @@ function fetchHostId(\mysqli $link, $userId, $orderId) {
             'SELECT host_id '
             . 'FROM users_orders_shards '
             . 'WHERE user_id=' . $userId . ' AND from_order_id <= ' . $orderId . ' '
-            . 'ORDER BY from_order_id DESC LIMIT 1');
+            . 'ORDER BY from_order_id DESC '
+            . 'LIMIT 1');
 }
 
 /**
@@ -165,13 +169,10 @@ function loadListForUser($userId, $status = LOAD_USER_ORDERS_ALL, $maxOrderId = 
         }
         
 		if ($hostInfo === null) {
-			return [];
+			break;
 		}
 		
-        $link = \Database\getConnection($hostInfo['host_id']);
-        if ($link === false) {
-            throw new Exception('Не удалось подключиться к хосту [' . $hostInfo['host_id'] . ']');
-        }
+        $link = \Database\getConnectionOrFall($hostInfo['host_id']);
         
         // собираем условия запроса
         $where = 'user_id=' . $userId;
@@ -188,12 +189,11 @@ function loadListForUser($userId, $status = LOAD_USER_ORDERS_ALL, $maxOrderId = 
         // получаем строки из базы
         $rows = \Database\fetchAll(
                 $link, 
-                'SELECT order_id, ts, price, finished_user_id '
+                'SELECT order_id, ts, price, finished_user_id, finished_ts '
                 . 'FROM users_orders '
                 . 'WHERE ' . $where . ' '
                 . 'ORDER BY order_id DESC '
                 . 'LIMIT ' . ($limit - count($orders)));
-        
         
         if (count($rows) > 0) {
             $orders = array_merge($orders, $rows);
@@ -255,4 +255,6 @@ function loadFinishedListForUser($userId, $maxFinishTs, $limit = 50) {
             $maxFinishTs = $finishedHostInfo['from_finished_ts'];
         }
     } while (count($orders) < $limit);
+    
+    return $orders;
 }

@@ -9,11 +9,6 @@
 	 * @type Number ID последнего загруженного заказа
 	 */
 	var maxOrderId = 0;
-	
-	/**
-	 * @type {Element} Список заказов на странице
-	 */
-	var ordersList = document.getElementById('orders-list');
     
 	/**
 	 * 
@@ -44,13 +39,62 @@
 	function addOrdersToTable(orders) {
 		for (var i in orders) {
 			var order = orders[i];
-			var row = ordersTableBody.insertRow(ordersTableBody.rows.length);
-			
-			var dateCell = row.insertCell(0);
-			dateCell.appendChild(document.createTextNode( currentUser.id.toString() + '-' + order['order_id']) );
+            createOrderTableRow(ordersTableBody.rows.length, order);
+            maxOrderId = order['order_id'];
 		}
 	}
 	
+    /**
+     * Добавить в таблицу строку с заказом на указанную позицию
+     * 
+     * @param {Number} rowNum номер строки, где должен располагаться заказ
+     * @param {Object} order данные заказа
+     * @param {Number} order.order_id ID заказа
+     * @param {Number} order.ts unix-время добавления заказа
+     * @param {Number} order.price сумма заказа
+     * @param {Number} order.finished_ts unix-время выполнения заказа (0 - не выполнен)
+     * @param {Number} order.finished_user_id ID исполнителя
+     * 
+     * @return {Element} добавленная в таблицу строка
+     */
+    function createOrderTableRow(rowNum, order) {
+        var row = ordersTableBody.insertRow(rowNum);
+
+        var idCell = row.insertCell(0);
+        idCell.className = 'cell-id';
+        idCell.appendChild(document.createTextNode(currentUser.id.toString() + '-' + order['order_id']));
+
+        var dateCell = row.insertCell(1);
+        dateCell.className = 'c';
+        dateCell.appendChild(document.createTextNode(
+                DateProc.shortDateTime(order.ts)
+                ));
+
+        var priceCell = row.insertCell(2);
+        priceCell.className = 'r';
+        priceCell.appendChild(document.createTextNode(order.price));
+
+        var statusCell = row.insertCell(3);
+
+        if (order.finished_ts == 0) {
+            Html.addClass(row, 'status-active');
+            statusCell.appendChild(document.createTextNode('Не выполнен'));
+        } else {
+            Html.addClass(row, 'status-finished');
+            statusCell.appendChild(document.createTextNode('Выполнен пользователем '));
+
+            var spanUser = document.createElement('b');
+            spanUser.innerHTML = UserStorage.getLogin(order.finished_user_id);
+            if (spanUser.innerHTML === '') {
+                spanUser.innerHTML = '[' + order.finished_user_id + ']';
+            }
+
+            statusCell.appendChild(spanUser);
+        }
+        
+        return row;
+    }
+    
 	/**
 	 * Загрузить заказы
 	 */
@@ -65,12 +109,17 @@
 					var Response = new JsonResponse(json);
 					if (Response.hasErrors()) {
 						Error.showFromResponse(Response);
-					} else {
-						addOrdersToTable(Response.getField('orders', []));
 					}
-					
-					UserStorage.addLogins(Response.getField('users', {}));
-					
+                    
+                    UserStorage.addLogins(Response.getField('users', {}));
+                    addOrdersToTable(Response.getField('orders', []));
+
+                    if (Response.getField('orders_more', false)) {
+                        Html.removeClass(ordersListLoadMore, 'hidden');
+                    } else {
+                        Html.addClass(ordersListLoadMore, 'hidden');
+                    }
+                    
                     Html.removeClass(ordersListLoadMore, 'loading');
                     ordersListLoading = false;
 				},
@@ -87,4 +136,20 @@
 			loadOrders();
 		}
 	};
+    
+    if (loadStatusId == 0 || loadStatusId == 1) {
+        Layout.orderAddedListeners.push(function(order) {
+            var row = createOrderTableRow(0, {
+                order_id:       order.order_id,
+                ts:             order.ts,
+                price:          order.price,
+                finished_ts:    0
+            });
+            
+            Html.addClass(row, 'order-new');
+            setTimeout(function() {
+                Html.removeClass(row, 'order-new');
+            }, 2000);
+        });
+    }
 })();
