@@ -234,6 +234,14 @@ html {
 	margin: 0 auto;
 }
 
+.login-form.processing .btn {
+	background-image: url(/img/upload.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+	cursor: default;
+    color: transparent;
+}
+
 .login-form__row {
 	font-size: 0;
 	margin-bottom: 10px;
@@ -347,10 +355,6 @@ html {
 .order.order_new {
 	background: #cec !important;
 	border-color: #cec !important;
-}
-
-.order.order_executing {
-	opacity: 0.6;
 }
 
 .order_executing .order__execute {
@@ -497,7 +501,7 @@ html {
 }
 
 .orders-list__load-more:hover {
-	background: #e9edf1;
+	background-color: #e9edf1;
 }
 
 .orders-list__load-more.hidden {

@@ -21,13 +21,14 @@ function htmlContent() {
             <label>Пароль:</label><input type="password" name="password" id="login-form__password" value="" />
         </div>
         <div class="login-form__submit-row">
-            <input type="submit" value="Войти" />
+            <input type="submit" value="Войти" class="btn" />
         </div>
     </form>
 </div>
     <?
 }
 
+$pageMenu = 'login';
 $pageTitle = 'Добро пожаловать!';
 $javascripts = [
 	'/js/pages/login.js'

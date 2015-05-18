@@ -37,6 +37,16 @@
 	var ordersLastUserId = 0;
 	
 	/**
+	 * @param {type} userId ID заказчика
+	 * @param {type} orderId ID заказа
+	 * 
+	 * @returns {String} ID блока с заказом
+	 */
+	function getOrderDivId(userId, orderId) {
+		return 'order-' + userId + '-' + orderId;
+	}
+	
+	/**
 	 * Создать html-блок для вывода заказа
 	 * 
 	 * @param {Object} order данные заказа
@@ -49,7 +59,7 @@
 	var createOrderElement = function(order) {
 		var div = document.createElement('div');
 		div.className = 'order';
-		div.id = 'order-' + order['user_id'] + '-' + order['order_id'];
+		div.id = getOrderDivId(order['user_id'], order['order_id']);
 
 		var divOwner = document.createElement('div');
 		divOwner.className = 'order__owner';
@@ -107,10 +117,14 @@
 						} else {
 							Html.addClass(div, 'order_finished');
 							Layout.updateBalance(parseFloat(Response.getField('balanceDelta')));
-							
 							setTimeout(function() {
 								div.parentNode.removeChild(div);
 							}, 1000);
+							Broadcast.orderExecuted(
+                                    order['user_id'], 
+                                    order['order_id'], 
+                                    Response.getField('balanceDelta'), 
+                                    Response.getField('finishTs'));
 						}
 					},
 					function (xhr) {
@@ -135,7 +149,6 @@
      * @param {Array} orders заказы
      */
 	var appendOrdersList = function(orders) {
-		
         for (var i in orders) {
             var order = orders[i];
             ordersList.appendChild(createOrderElement(order));
@@ -178,7 +191,12 @@
                     if (Response.hasErrors()) {
                         Errors.showFromResponse(Response);
                     }
-                    UserStorage.addLogins(Response.getField('users', {}));
+					
+					var loginsMap = Response.getField('users', {});
+					
+                    UserStorage.addLogins(loginsMap);
+					Broadcast.userLoginsLoaded(loginsMap);
+					
                     appendOrdersList(Response.getField('orders', []));
                     
 					if (Response.getField('orders_more')) {
@@ -203,7 +221,12 @@
         }
     };
 	
-	Layout.orderAddedListeners.push(function(order) {
+	/**
+	 * Добавление нового заказа в список
+	 * 
+	 * @param {Object} order
+	 */
+	var addNewOrderToList = function(order) {
 		var orderDiv = createOrderElement({
 			user_id:	currentUser.id,
 			order_id:	order.order_id,
@@ -215,5 +238,25 @@
 		setTimeout(function() {
 			Html.removeClass(orderDiv, 'order_new');
 		}, 2000);
-	});
+	}
+	
+	// вешаем обработку добавления заказа с текущей вкладки
+	Layout.orderAddedListeners.push(addNewOrderToList);
+	
+	// вешаем обработку добавления заказа с другой вкладки
+	Broadcast.orderAddedListener = function(orderId, price, ts) {
+		addNewOrderToList({
+			order_id: orderId,
+			price: price
+		});
+	};
+	
+	// вешаем обработку выполнения заказа в другой вкладке
+	Broadcast.orderExecutedListener = function(userId, orderId, balanceDelta, finishTs) {
+		var orderDiv = document.getElementById(getOrderDivId(userId, orderId));
+		if (orderDiv !== null) {
+			orderDiv.parentNode.removeChild(orderDiv);
+		}
+		Layout.updateBalance(parseFloat(balanceDelta));
+	};
 })();

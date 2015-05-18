@@ -73,6 +73,8 @@ function loadOrders($limit, $maxTs, $ignoreUserId, $ignoreOrderId) {
 		// условие для исключения последнего в списке заказа от предыдущего запроса
         $where = '(ts = ' . $maxTs . ' AND user_id = ' . $ignoreUserId . ' AND order_id < ' . $ignoreOrderId . ') OR '
                         . '(ts = ' . $maxTs . ' AND user_id < ' . $ignoreUserId . ') OR ts < ' . $maxTs;
+	} else {
+		$where = 'ts <= ' . $maxTs;
 	}
 	
     do {

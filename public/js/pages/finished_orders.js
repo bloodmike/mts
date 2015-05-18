@@ -40,37 +40,49 @@
     function addOrdersToTable(orders) {
         for (var i in orders) {
             var order = orders[i];
-            
-            var row = finishedOrdersTableBody.insertRow(finishedOrdersTableBody.rows.length);
-            
-            var dateCell = row.insertCell(0);
-            dateCell.className = 'c';
-            dateCell.appendChild(document.createTextNode(
-                    DateProc.shortDateTime(order.finished_ts)
-                ));
-            
-            var priceCell = row.insertCell(1);
-            priceCell.className = 'r';
-            priceCell.appendChild(document.createTextNode(order.income));
-            
-			var idCell = row.insertCell(2);
-            idCell.className = 'cell-id';
-			idCell.appendChild(document.createTextNode(order.user_id.toString() + '-' + order.order_id) );
-            
-            var ownerCell = row.insertCell(3);
-            ownerCell.className = 'c';
-            
-            var login = UserStorage.getLogin(order.user_id);
-            if (login === '') {
-                login = '[' + order.user_id + ']';
-            }
-            
-            ownerCell.appendChild(document.createTextNode(login));
-            
+            addOrderToTable(finishedOrdersTableBody.rows.length, order);
             maxOrderTs = order.finished_ts;
         }
     }
     
+	/**
+	 * Добавить заказ в начало таблицы
+	 * 
+	 * @param {Number} position
+	 * @param {Object} order
+	 * @param {Number} order.user_id
+	 * @param {Number} order.order_id
+	 * @param {Number} order.income
+	 * @param {Number} order.finished_ts
+	 */
+	function addOrderToTable(position, order) {
+		var row = finishedOrdersTableBody.insertRow(position);
+            
+		var dateCell = row.insertCell(0);
+		dateCell.className = 'c';
+		dateCell.appendChild(document.createTextNode(
+				DateProc.shortDateTime(order.finished_ts)
+			));
+
+		var priceCell = row.insertCell(1);
+		priceCell.className = 'r';
+		priceCell.appendChild(document.createTextNode(order.income));
+
+		var idCell = row.insertCell(2);
+		idCell.className = 'cell-id';
+		idCell.appendChild(document.createTextNode(order.user_id.toString() + '-' + order.order_id) );
+
+		var ownerCell = row.insertCell(3);
+		ownerCell.className = 'c';
+
+		var login = UserStorage.getLogin(order.user_id);
+		if (login === '') {
+			login = '[' + order.user_id + ']';
+		}
+
+		ownerCell.appendChild(document.createTextNode(login));
+	}
+	
 	/**
 	 * Загрузить выполненные заказы
 	 */
@@ -84,10 +96,13 @@
 				function(json) {
 					var Response = new JsonResponse(json);
 					if (Response.hasErrors()) {
-						Error.showFromResponse(Response);
+						Errors.showFromResponse(Response);
 					}
                     
-                    UserStorage.addLogins(Response.getField('users', {}));
+					var loginsMap = Response.getField('users', {});
+                    UserStorage.addLogins(loginsMap);
+					Broadcast.userLoginsLoaded(loginsMap);
+					
                     addOrdersToTable(Response.getField('orders', []));
 
                     if (Response.getField('orders_more', false)) {
@@ -111,5 +126,17 @@
 		if (!ordersListLoading) {
 			loadFinishedOrders();
 		}
+	};
+	
+	// вешаем обработчик на выполнение заказа в другой вкладке
+	Broadcast.orderExecutedListener = function(userId, orderId, balanceDelta, finishTs) {
+		addOrderToTable(0, {
+			user_id:		userId,
+			order_id:		orderId,
+			income:			balanceDelta,
+			finished_ts:	finishTs
+		});
+		
+		Layout.updateBalance(parseFloat(balanceDelta));
 	};
 })();

@@ -38,11 +38,12 @@ function executeOrder() {
             return \Response\jsonAddError($response, \Error\CANNT_EXECUTE_OWN_ORDER);
 		}
 		
-		$balanceDelta = \Action\executeOrder($userId, $orderId);
-		if ($balanceDelta == -1) {
+		$result = \Action\executeOrder($userId, $orderId);
+		if ($result === null) {
             \Response\jsonAddError($response, \Error\ORDER_ALREADY_EXECUTED);
 		} else {
-			$response['balanceDelta'] = $balanceDelta;
+			$response['balanceDelta'] = $result['balanceDelta'];
+			$response['finishTs'] = $result['finishTs'];
 		}
     } catch (Exception $Exception) {
 		error_log($Exception->getFile() . '[' . $Exception->getLine() . ']: ' .  $Exception->getMessage());
