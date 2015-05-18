@@ -8,6 +8,7 @@ namespace Database;
 
 use Exception;
 use mysqli;
+use mysqli_result;
 
 /**
  * @staticvar mysqli[] $connectionLinksMap хранилище всех открытых подключений к базам
@@ -110,6 +111,44 @@ function closeConnection($hostId) {
 }
 
 /**
+ * Выполняет SQL-запрос на переданном подключении к базе
+ * 
+ * @param mysqli $link подключение к базе
+ * @param string $query SQL-запрос
+ * 
+ * @return mysqli_result объект с результатом выполнения запроса
+ * 
+ * @throws Exception при ошибках выполнения запроса
+ */
+function executeSQL(mysqli $link, $query) {
+    $result = mysqli_query($link, $query);
+    if ($result === false) {
+        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
+    }
+    
+    return $result;
+}
+
+/**
+ * Выполняет DML-запрос на переданном подключении к базе
+ * 
+ * @param mysqli $link подключение к базе
+ * @param string $query DML-запрос
+ * 
+ * @return int количество изменённых в результате запроса строк
+ * 
+ * @throws Exception при ошибках выполнения запроса
+ */
+function executeDML(mysqli $link, $query) {
+    $result = mysqli_query($link, $query);
+    if ($result === false) {
+        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
+    }
+    
+    return mysqli_affected_rows($link);
+}
+
+/**
  * @param mysqli $link подключение к базе
  * @param string $query запрос
  * 
@@ -118,10 +157,8 @@ function closeConnection($hostId) {
  * @throws Exception при ошибках выполнения запроса
  */
 function fetchOne(mysqli $link, $query) {
-    $result = mysqli_query($link, $query);
-    if ($result === false) {
-        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
-    } elseif ($result->num_rows == 0) {
+    $result = executeSQL($link, $query);
+    if ($result->num_rows == 0) {
         return null;
     }
     
@@ -165,17 +202,13 @@ function fetchAll(mysqli $link, $query, $throwOnError = true) {
  * @throws Exception при ошибках выполнения запроса
  */
 function fetchPairs($link, $query) {
-	$result = mysqli_query($link, $query);
-    
+	$result = executeSQL($link, $query);
     $rows = [];
-    if ($result === false) {
-		throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
-    } else {
-        while ($row = mysqli_fetch_row($result)) {
-            $rows[$row[0]] = $row[1];
-        }
-        mysqli_free_result($result);
+    while ($row = mysqli_fetch_row($result)) {
+        $rows[$row[0]] = $row[1];
     }
+    mysqli_free_result($result);
+    
     return $rows;
 }
 
@@ -188,10 +221,8 @@ function fetchPairs($link, $query) {
  * @throws Exception при ошибках выполнения запроса
  */
 function fetchRow(mysqli $link, $query) {
-    $result = mysqli_query($link, $query);
-    if ($result === false) {
-        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
-    } elseif (mysqli_num_rows($result) == 0) {
+    $result = executeSQL($link, $query);
+    if (mysqli_num_rows($result) == 0) {
         return null;
     }
     
@@ -209,10 +240,7 @@ function fetchRow(mysqli $link, $query) {
  * @throws Exception при ошибках выполнения запроса
  */
 function fetchSingle(mysqli $link, $query) {
-    $result = mysqli_query($link, $query);
-    if ($result === false) {
-        throw new Exception('При запросе возникла ошибка: ' . mysqli_error($link) . PHP_EOL . $query);
-    }
+    $result = executeSQL($link, $query);
     
     $values = [];
     if (mysqli_num_rows($result) > 0) { 

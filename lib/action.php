@@ -43,7 +43,8 @@ function createOrder($price) {
     $orderId = \Order\loadNextOrderId($hostLink, $userId, $host['from_order_id']);
     
     $time = time();
-    $result = mysqli_query(
+    
+    \Database\executeDML(
             $hostLink, 
             'INSERT INTO users_orders '
             . 'SET user_id=' . $userId . ', '
@@ -53,10 +54,6 @@ function createOrder($price) {
             . 'finished_user_id=0, '
             . 'finished_ts=0, '
             . 'price=' . $price);
-    
-    if ($result === false) {
-        throw new Exception('Не удалось добавить заказ [' . $userId . ', ' . $orderId . ']: ' . mysqli_error($hostLink));
-    }
     
     // добавляем заказ в дайджест, чтобы его смогли увидеть все пользователи
     if (!addOrderToDigest($userId, $orderId, $time, $price)) {
@@ -95,15 +92,12 @@ function addOrderToDigest($userId, $orderId, $ts, $price) {
         $hostId = \Digest\findHostId($userId, $orderId, $ts);
 
         $link = \Database\getConnectionOrFall($hostId);
-
-        $result = mysqli_query(
+        
+        \Database\executeDML(
                 $link, 
                 'INSERT IGNORE INTO orders_digest(ts, user_id, order_id, price) '
                 . 'VALUES(' . $ts . ', ' . $userId . ', ' . $orderId . ', ' . $price . ')');
-
-        if ($result === false) {
-            throw new Exception('При добавлении заказа в дайджест на хосте [' . $hostId . '] возникла ошибка: ' . mysqli_error($link));
-        }
+        
     } catch (Exception $Exception) {
 		error_log($Exception->getFile() . '[' . $Exception->getLine() . ']: ' .  $Exception->getMessage());
         $return = false;
@@ -126,19 +120,15 @@ function addOrderToDigest($userId, $orderId, $ts, $price) {
 function removeOrderFromDigest($userId, $orderId, $ts) {
     $return = true;
     try {
-        
         $hostId = \Digest\findHostId($userId, $orderId, $ts);
         $link = \Database\getConnectionOrFall($hostId);
         
-        $result = mysqli_query(
+        \Database\executeDML(
                 $link, 
                 'DELETE FROM orders_digest '
                 . 'WHERE user_id=' . $userId . ' AND order_id=' . $orderId . ' AND ts=' . $ts . ' '
                 . 'LIMIT 1');
-        
-        if ($result === false) {
-            throw new Exception('При удалении заказа из дайджеста на хосте [' . $hostId . '] возникла ошибка: ' . mysqli_error($link));
-        }
+
     } catch (Exception $Exception) {
         error_log($Exception->getMessage());
         $return = false;
@@ -358,10 +348,11 @@ function updateUserBalance($userHostId, $userId, $balanceDelta) {
     $return = true;
     try {
 		$userHostLink = \Database\getConnectionOrFall($userHostId);
-        $result = mysqli_query($userHostLink, 'UPDATE users SET balance= balance + ' . $balanceDelta . ' WHERE id=' . $userId . ' LIMIT 1');
-        if ($result === false) {
-            throw new Exception('При обновлении баланса на хосте [' . $userHostId . '] возникал ошибка: ' . mysqli_error($userHostLink));
-        } elseif (mysqli_affected_rows($userHostLink) == 0) {
+        $updatedRows = \Database\executeDML(
+                $userHostLink, 
+                'UPDATE users SET balance= balance + ' . $balanceDelta . ' WHERE id=' . $userId . ' LIMIT 1');
+        
+        if ($updatedRows == 0) {
             throw new Exception('Не удалось обновить баланс пользователя [' . $userId . '] на хосте [ ' . $userHostId . ']: пользователь не найден');
         }
     } catch (Exception $Exception) {
@@ -420,14 +411,10 @@ function addOrderToFinished($finishUserHostId, $finishUserId, $finishTs, $balanc
         }
         
         $finishedLink = \Database\getConnectionOrFall($hostId);
-        $result = mysqli_query(
+        \Database\executeDML(
                 $finishedLink, 
                 'INSERT IGNORE INTO finished_orders(finished_user_id, finished_ts, income, user_id, order_id) '
                 . 'VALUES(' . $finishUserId . ', ' . $finishTs . ', ' . $balanceDelta . ', ' . $userId . ', ' . $orderId . ')');
-        
-        if ($result === false) {
-            throw new Exception('При выполнении запроса на хосте [' . $hostId . '] возникла ошибка: ' . mysqli_error($finishedLink));
-        }
         
     } catch (Exception $Exception) {
         error_log($Exception->getMessage());

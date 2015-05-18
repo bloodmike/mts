@@ -68,10 +68,11 @@ function loadOrders($limit, $maxTs, $ignoreUserId, $ignoreOrderId) {
     $link = \Database\getConnectionOrFall($rootDatabaseHostId);
     $orders = [];
     
-	$ignoreWhere = '';
+	$where = '';
 	if ($ignoreUserId > 0 && $ignoreOrderId > 0) {
 		// условие для исключения последнего в списке заказа от предыдущего запроса
-		$ignoreWhere = ' AND (user_id <> ' . $ignoreUserId .' OR order_id <> ' . $ignoreOrderId .')';
+        $where = '(ts = ' . $maxTs . ' AND user_id = ' . $ignoreUserId . ' AND order_id < ' . $ignoreOrderId . ') OR '
+                        . '(ts = ' . $maxTs . ' AND user_id < ' . $ignoreUserId . ') OR ts < ' . $maxTs;
 	}
 	
     do {
@@ -95,7 +96,7 @@ function loadOrders($limit, $maxTs, $ignoreUserId, $ignoreOrderId) {
                     $digestLink, 
                     'SELECT ts, user_id, order_id, price '
                     . 'FROM orders_digest '
-                    . 'WHERE ts <= ' . $maxTs . $ignoreWhere . ' '
+                    . 'WHERE ' . $where . ' '
                     . 'ORDER BY ts DESC, user_id DESC, order_id DESC '
                     . 'LIMIT ' . ($limit - count($orders)));
         }
@@ -108,7 +109,7 @@ function loadOrders($limit, $maxTs, $ignoreUserId, $ignoreOrderId) {
 			break;
 		}
 		
-		$ignoreWhere = '';
+		$where = 'ts <= ' . $maxTs;
         $orders = array_merge($orders, $foundOrders);
     } while (count($orders) < $limit);
     
