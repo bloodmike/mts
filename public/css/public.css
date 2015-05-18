@@ -154,6 +154,14 @@ html {
 	z-index: 10;
 }
 
+.add-order-dialog.processing .btn {
+    background-image: url(/img/upload.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+    color: transparent;
+    cursor: default;
+}
+
 .add-order-dialog.hidden {
 	display: none;
 }
@@ -346,7 +354,11 @@ html {
 }
 
 .order_executing .order__execute {
+    background-image: url(/img/upload.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
 	cursor: default;
+    color: transparent;
 }
 
 .order.order_finished {
@@ -374,6 +386,13 @@ html {
     margin: 15px 0 0;
     padding: 10px;
     text-align: center;
+}
+
+.orders-list__load-more.loading {
+    background-image: url(/img/upload.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+    color: transparent;
 }
 
 .orders-list:after {
@@ -434,19 +453,20 @@ html {
 }
 
 .btn {
-	background: #6383a8;
+	background-color: #6383a8;
 	border-radius: 2px;
+	-moz-border-radius: 2px;
+	-webkit-border-radius: 2px;
 	border: 0px none;
 	color: #fff;
 	cursor: pointer;
-	-moz-border-radius: 2px;
-	-webkit-border-radius: 2px;
 	font-size: 13px;
 	padding: 3px 13px 4px;
+    -webkit-appearance: none;
 }
 
 .btn:hover {
-	background: #678eb5;
+	background-color: #678eb5;
 }
 
 .order__execute {

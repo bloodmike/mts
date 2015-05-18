@@ -409,6 +409,11 @@ var Layout = {
 	 * Вешает события, связанные с диалогом добавления заказа.
 	 */
 	setUpAddOrderDialog: function() {
+        /**
+         * @type Boolean выполняется ли сейчас добавление заказа
+         */
+        var orderAddProcessing = false;
+        
 		var divDialog = document.getElementById('add-order-dialog');
 		if (divDialog === null) {
 			return;
@@ -435,13 +440,17 @@ var Layout = {
 		 * @param {Event} event
 		 */
 		var addOrderFormListener = function(event) {
+            if (orderAddProcessing) {
+                return;
+            }
+            
 			event.preventDefault();
 			var price = parseFloat(priceInput.value.replace(/[ ]/g, ''));
-			if (!isNaN(price) && price >= 0.00 && price <= 1000000) {
+			if (!isNaN(price)) {
 				Html.removeClass(priceInput, 'error-box');
 				Html.removeClass(addOrderErrorMessage, 'error-visible');
 				Html.removeClass(addOrderSuccessMessage, 'success-visible');
-				Actions.createOrder(
+				orderAddProcessing = Actions.createOrder(
 						price, 
 						function(json) {
 							var Response = new JsonResponse(json);
@@ -472,10 +481,19 @@ var Layout = {
 									});
 								}
 							}
+                            orderAddProcessing = false;
+                            Html.removeClass(divDialog, 'processing');
 						},
 						function(xhr) {
 							console.log(xhr);
+                            orderAddProcessing = false;
+                            Html.removeClass(divDialog, 'processing');
 						});
+                
+                if (orderAddProcessing) {
+                    Html.addClass(divDialog, 'processing');
+                }
+                        
 			} else {
 				Html.addClass(priceInput, 'error-box');
 			}

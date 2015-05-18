@@ -15,7 +15,7 @@ var Actions = {
      */
     createOrder: function(price, callback, callbackFail) {
                     callbackFail = callbackFail || null;
-                    if (price >= 0) {
+                    if (price >= 0 && price <= 1000000) {
                         ajaxJson(
                                 "POST",
                                 "/order_add.php", {
