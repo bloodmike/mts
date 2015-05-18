@@ -143,7 +143,10 @@ function removeOrderFromDigest($userId, $orderId, $ts) {
  * @param int $userId ID пользователя-заказчика
  * @param int $orderId ID заказа
  * 
- * @return double полученная исполнителем прибыль (-1 если не удалось выполнить заказ)
+ * @return array|null данные выполненного заказа (null - если заказ не найден или уже выполнен):
+ *                      balanceDelta - изменение баланса исполнителя,
+ *                      ts - unix-время создания заказа,
+ *                      finishTs - unix-время выполнения заказа
  * 
  * @throws Exception при ошибках в работе с базой
  */
@@ -161,20 +164,17 @@ function executeOrder($userId, $orderId) {
         $executeResult = executeOrderMultiHost($userHostId, $orderHostId, $currentUserId, $userId, $orderId);
     }
     
-    if ($executeResult === null) {
-        // не удалось выполнить заказ - останавливаем задачу
-        return -1;
+    if ($executeResult !== null) {
+        if (!removeOrderFromDigest($userId, $orderId, $executeResult['ts'])) {
+            \DoLog\appendRemoveFromDigest($userId, $orderId, $executeResult['ts']);
+        }
+
+        if (!addOrderToFinished($userHostId, $currentUserId, $executeResult['finishTs'], $executeResult['balanceDelta'], $userId, $orderId)) {
+            \DoLog\appendAddToFinished($currentUserId, $executeResult['finishTs'], $executeResult['balanceDelta'], $userId, $orderId);
+        }
     }
     
-    if (!removeOrderFromDigest($userId, $orderId, $executeResult['ts'])) {
-        \DoLog\appendRemoveFromDigest($userId, $orderId, $executeResult['ts']);
-    }
-    
-    if (!addOrderToFinished($userHostId, $currentUserId, $executeResult['finishTs'], $executeResult['balanceDelta'], $userId, $orderId)) {
-        \DoLog\appendAddToFinished($currentUserId, $executeResult['finishTs'], $executeResult['balanceDelta'], $userId, $orderId);
-    }
-    
-    return $executeResult['balanceDelta'];
+    return $executeResult;
 }
 
 /**

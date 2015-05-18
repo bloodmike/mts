@@ -107,10 +107,14 @@
 						} else {
 							Html.addClass(div, 'order_finished');
 							Layout.updateBalance(parseFloat(Response.getField('balanceDelta')));
-							
 							setTimeout(function() {
 								div.parentNode.removeChild(div);
 							}, 1000);
+							Broadcast.orderExecuted(
+                                    order['user_id'], 
+                                    order['order_id'], 
+                                    Response.getField('balanceDelta'), 
+                                    Response.getField('finishTs'));
 						}
 					},
 					function (xhr) {

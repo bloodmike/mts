@@ -367,6 +367,153 @@ JsonResponse.prototype.getField = function(field, defaultValue) {
 }
 
 /**
+ * Функции для оповещений других вкладок о событиях текущей вкладки
+ * 
+ * @type Object
+ */
+var Broadcast = {
+    
+    /**
+     * @type Number событие "пользователь разлогинился"
+     */
+    EVENT_LOGOUT: 1,
+    
+    /**
+     * @type Number событие "пользователь добавил заказ"
+     */
+    EVENT_ORDER_ADDED: 2,
+    
+    /**
+     * @type Number событие "пользователь выполнил заказ"
+     */
+    EVENT_ORDER_EXECUTED: 3,
+    
+    /**
+     * @type String ссылка, передаваемая параметром origin
+     */
+    __origin: '',
+    
+    /**
+     * Отправить postMessage-запрос
+     * 
+     * @private
+     * 
+     * @param {Number} eventId
+     * @param {Array} data
+     */
+    __sendMessage: function(eventId, data) {
+        if (!!window.postMessage) {
+            window.postMessage(eventId.toString() + "|" + data.join("|"), Broadcast.__origin);
+        }
+    },
+    
+    /**
+     * Текущий пользователь вышел из системы
+     */
+    logOut: function() {
+        Broadcast.__sendMessage(Broadcast.EVENT_LOGOUT, []);
+    },
+    
+    /**
+     * Текущий пользователь выполнил заказ
+     * 
+     * @param {Number} userId ID заказчика
+     * @param {Number} orderId ID заказа
+     * @param {Number} balanceDelta сумма, на которую был изменен баланс
+     * @param {Number} finishTs unix-время выполнения заказа
+     */
+    orderExecuted: function(userId, orderId, balanceDelta, finishTs) {
+        Broadcast.__sendMessage(Broadcast.EVENT_ORDER_EXECUTED, [userId, orderId, balanceDelta, finishTs]);
+    },
+    
+    /**
+     * Текущий пользователь добавил заказ
+     * 
+     * @param {Number} orderId ID заказа
+     * @param {Number} price сумма заказа
+     * @param {Number} ts unix-время добавления заказа
+     */
+    orderAdded: function(orderId, price, ts) {
+        Broadcast.__sendMessage(Broadcast.EVENT_ORDER_ADDED, [orderId, price, ts]);
+    },
+    
+    /**
+     * Обработчик события "пользователь разлогинился"
+     */
+    logOutListener: function() {
+        window.location.href = "/login.php";
+    },
+    
+    /**
+     * Обработчик события "пользователь добавил заказ"
+     * 
+     * @param {Number} orderId
+     * @param {Number} price
+     * @param {Number} ts
+     */
+    orderAddedListener: function(orderId, price, ts) {
+        
+    },
+    
+    /**
+     * Обработчик события "пользователь выполнил заказ"
+     * 
+     * @param {Number} userId
+     * @param {Number} orderId
+     * @param {Number} balanceDelta
+     * @param {Number} finishTs
+     */
+    orderExecutedListener: function(userId, orderId, balanceDelta, finishTs) {
+        
+    },
+    
+    /**
+     * Обработчик событий о приходе сообщений
+     * 
+     * @param {Object} event
+     * @param {String} event.data
+     * @param {String} event.origin
+     */
+    receiveMessage: function(event) {
+        if (event.origin != Broadcast.__origin) {
+            return;
+        }
+        
+        var data = event.data.toString().split('|');
+        var eventId = parseInt(data[0]);
+        if (isNaN(eventId)) {
+            eventId = 0;
+        }
+        
+        switch (eventId) {
+            case Broadcast.EVENT_LOGOUT:
+                Broadcast.logOutListener();
+                break;
+                
+            case Broadcast.EVENT_ORDER_ADDED:
+                Broadcast.orderAddedListener(data[1], data[2], data[3]);
+                break;
+                
+            case Broadcast.EVENT_ORDER_EXECUTED:
+                Broadcast.orderExecutedListener(data[1], data[2], data[3], data[4]);
+                break;
+                
+            default:
+                console.log('Неизвестное событие: %s', event.data.toString());
+                break;
+        }
+    },
+    
+    /**
+     * Настройка прослушивания и отправки postMessage
+     */
+    setUp: function() {
+        Broadcast.__origin = window.location.protocol + "://" + window.location.host;
+        window.addEventListener("message", Broadcast.receiveMessage, false);
+    }
+};
+
+/**
  * Функции для управления общими блоками страницы: баланс, попапы и т.д.
  * 
  * @type {Object}
@@ -480,6 +627,8 @@ var Layout = {
 										ts:			json.order.ts
 									});
 								}
+                                
+                                Broadcast.orderAdded(json.order.id, json.order.price, json.order.ts);
 							}
                             orderAddProcessing = false;
                             Html.removeClass(divDialog, 'processing');
@@ -578,3 +727,6 @@ var DateProc = {
 
 /* Инициализируем страницу */
 Layout.setUpAddOrderDialog();
+
+/* Вешаем прослушку событий postMessage */
+Broadcast.setUp();
