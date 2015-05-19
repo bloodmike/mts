@@ -53,6 +53,7 @@
 	 * @param {Number} order.user_id ID заказчика
 	 * @param {Number} order.order_id ID заказа
 	 * @param {Number} order.price сумма заказа
+	 * @param {Number} order.ts unix-время создания заказа
 	 * 
 	 * @returns {Element} div с данными заказа
 	 */
@@ -60,6 +61,7 @@
 		var div = document.createElement('div');
 		div.className = 'order';
 		div.id = getOrderDivId(order['user_id'], order['order_id']);
+		div.ts = order['ts'];
 
 		var divOwner = document.createElement('div');
 		divOwner.className = 'order__owner';
@@ -142,6 +144,32 @@
         }
 		return div;
 	}
+	
+	/**
+	 * @param {Number} userId
+	 * @param {Number} orderId
+	 * @param {Number} ts
+	 * 
+	 * @returns {Element|null} блок, перед которым нужно разместить указанный заказ, или null если заказ нужно разместить в конце списка
+	 */
+	var getNodeToInsertBefore = function(userId, orderId, ts) {
+		
+		var prevNode = null;
+		var orderDivId = getOrderDivId(userId, orderId);
+		
+		for (var i in ordersList.childNodes) {
+			
+			var div = ordersList.childNodes[i];
+			var divTs = parseInt(div.ts);
+			if (divTs > ts || (divTs == ts && div.id > orderDivId)) {
+				return prevNode;
+			}
+			
+			prevNode = ordersList.childNodes[i];
+		}
+		
+		return null;
+	};
 	
     /**
      * Добавить в дайджест перечисленные заказы
@@ -246,8 +274,9 @@
 	// вешаем обработку добавления заказа с другой вкладки
 	Broadcast.orderAddedListener = function(orderId, price, ts) {
 		addNewOrderToList({
-			order_id: orderId,
-			price: price
+			order_id:	orderId,
+			price:		price,
+			ts:			ts
 		});
 	};
 	
