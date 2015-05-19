@@ -108,10 +108,13 @@
 				function(json) {
 					var Response = new JsonResponse(json);
 					if (Response.hasErrors()) {
-						Error.showFromResponse(Response);
+						Errors.showFromResponse(Response);
 					}
                     
-                    UserStorage.addLogins(Response.getField('users', {}));
+					var loginsMap = Response.getField('users', {});
+                    UserStorage.addLogins(loginsMap);
+					Broadcast.userLoginsLoaded(loginsMap);
+					
                     addOrdersToTable(Response.getField('orders', []));
 
                     if (Response.getField('orders_more', false)) {
@@ -138,8 +141,9 @@
 	};
     
     if (loadStatusId == 0 || loadStatusId == 1) {
-        Layout.orderAddedListeners.push(function(order) {
-            var row = createOrderTableRow(0, {
+		
+		var addNewOrderToTable = function(order) {
+			var row = createOrderTableRow(0, {
                 order_id:       order.order_id,
                 ts:             order.ts,
                 price:          order.price,
@@ -150,6 +154,19 @@
             setTimeout(function() {
                 Html.removeClass(row, 'order-new');
             }, 2000);
-        });
+		}
+		
+		// добавление заказа из текущей вкладки
+        Layout.orderAddedListeners.push(addNewOrderToTable);
+		
+		// добавление заказа из другой вкладки
+		Broadcast.orderAddedListener = function(orderId, price, ts) {
+			addNewOrderToTable({
+				order_id: orderId,
+				price: price,
+				ts: ts,
+				finished_ts: 0
+			});
+		};
     }
 })();

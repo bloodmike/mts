@@ -234,6 +234,14 @@ html {
 	margin: 0 auto;
 }
 
+.login-form.processing .btn {
+	background-image: url(/img/upload.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+	cursor: default;
+    color: transparent;
+}
+
 .login-form__row {
 	font-size: 0;
 	margin-bottom: 10px;
@@ -349,10 +357,6 @@ html {
 	border-color: #cec !important;
 }
 
-.order.order_executing {
-	opacity: 0.6;
-}
-
 .order_executing .order__execute {
     background-image: url(/img/upload.gif);
     background-repeat: no-repeat;
@@ -379,16 +383,25 @@ html {
 }
 
 .orders-list__load-more {
+    margin: 15px 0 0;
+}
+
+.orders-list__load-new {
+    margin: 0 0 15px;
+}
+
+.orders-list__load-more,
+.orders-list__load-new {
 	background: none repeat scroll 0 0 #eff1f3;
     color: #738392;
 	cursor: pointer;
     display: block;
-    margin: 15px 0 0;
     padding: 10px;
     text-align: center;
 }
 
-.orders-list__load-more.loading {
+.orders-list__load-more.loading,
+.orders-list__load-new.loading {
     background-image: url(/img/upload.gif);
     background-repeat: no-repeat;
     background-position: center center;
@@ -496,10 +509,12 @@ html {
     right: 16px;
 }
 
-.orders-list__load-more:hover {
-	background: #e9edf1;
+.orders-list__load-more:hover,
+.orders-list__load-new:hover {
+	background-color: #e9edf1;
 }
 
-.orders-list__load-more.hidden {
+.orders-list__load-more.hidden,
+.orders-list__load-new.hidden {
 	display: none;
 }

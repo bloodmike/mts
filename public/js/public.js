@@ -388,13 +388,18 @@ var Broadcast = {
      */
     EVENT_ORDER_EXECUTED: 3,
     
+	/**
+	 * @type Number событие "загружены логины пользователей"
+	 */
+	EVENT_USER_LOGINS_LOADED: 4,
+	
     /**
      * @type String ссылка, передаваемая параметром origin
      */
     __origin: '',
     
     /**
-     * Отправить postMessage-запрос
+     * Отправить широковещательный запрос
      * 
      * @private
      * 
@@ -403,7 +408,8 @@ var Broadcast = {
      */
     __sendMessage: function(eventId, data) {
         if (!!window.postMessage) {
-            window.postMessage(eventId.toString() + "|" + data.join("|"), Broadcast.__origin);
+            //window.postMessage(eventId.toString() + "|" + data.join("|"), Broadcast.__origin);
+			window.localStorage.setItem('event', eventId.toString() + "|" + data.join("|"));
         }
     },
     
@@ -437,6 +443,25 @@ var Broadcast = {
         Broadcast.__sendMessage(Broadcast.EVENT_ORDER_ADDED, [orderId, price, ts]);
     },
     
+	/**
+	 * Загружены логины пользователей
+	 * 
+	 * @param {Object} loginsMap хэшмэп логинов пользователей
+	 */
+	userLoginsLoaded: function(loginsMap) {
+		var hasLogins = false;
+		for (var i in loginsMap) {
+			if (loginsMap.hasOwnProperty(i)) {
+				hasLogins = true;
+				break;
+			}
+		}
+		
+		if (hasLogins) {
+			Broadcast.__sendMessage(Broadcast.EVENT_USER_LOGINS_LOADED, [JSON.stringify(loginsMap)]);
+		}
+	},
+	
     /**
      * Обработчик события "пользователь разлогинился"
      */
@@ -464,9 +489,18 @@ var Broadcast = {
      * @param {Number} finishTs
      */
     orderExecutedListener: function(userId, orderId, balanceDelta, finishTs) {
-        
+        Layout.updateBalance(parseFloat(balanceDelta));
     },
     
+	/**
+	 * Обработчик события "загружены логины пользователей"
+	 * 
+	 * @param {Object} loginsMap
+	 */
+	userLoginsLoadedListener: function(loginsMap) {
+		UserStorage.addLogins(loginsMap);
+	},
+	
     /**
      * Обработчик событий о приходе сообщений
      * 
@@ -475,11 +509,10 @@ var Broadcast = {
      * @param {String} event.origin
      */
     receiveMessage: function(event) {
-        if (event.origin != Broadcast.__origin) {
-            return;
-        }
-        
-        var data = event.data.toString().split('|');
+		console.log('Событие получено: %s', event.newValue);
+		console.log(event);
+		        
+        var data = event.newValue.toString().split('|');
         var eventId = parseInt(data[0]);
         if (isNaN(eventId)) {
             eventId = 0;
@@ -497,19 +530,28 @@ var Broadcast = {
             case Broadcast.EVENT_ORDER_EXECUTED:
                 Broadcast.orderExecutedListener(data[1], data[2], data[3], data[4]);
                 break;
-                
+            
+			case Broadcast.EVENT_USER_LOGINS_LOADED:
+				Broadcast.userLoginsLoadedListener(JSON.parse(data[1]));
+				break;
+			
             default:
-                console.log('Неизвестное событие: %s', event.data.toString());
+                console.log('Неизвестное событие: %s', event.newValue.toString());
                 break;
         }
     },
     
     /**
-     * Настройка прослушивания и отправки postMessage
+     * Настройка прослушивания и отправки сообщений
      */
     setUp: function() {
-        Broadcast.__origin = window.location.protocol + "://" + window.location.host;
-        window.addEventListener("message", Broadcast.receiveMessage, false);
+        Broadcast.__origin = window.location.protocol + "//" + window.location.host;
+        //window.addEventListener("message", Broadcast.receiveMessage, true);
+		if (window.addEventListener) {
+			window.addEventListener("storage", Broadcast.receiveMessage, false);
+		} else {
+			window.attachEvent("onstorage", Broadcast.receiveMessage);
+		}
     }
 };
 
@@ -555,7 +597,19 @@ var Layout = {
 	/**
 	 * Вешает события, связанные с диалогом добавления заказа.
 	 */
-	setUpAddOrderDialog: function() {
+	setUp: function() {
+		
+		var logOutButton = document.getElementById('header-menu__logout');
+		if (logOutButton !== null) {
+			logOutButton.onclick = function(event) {
+				if (confirm('Хотите выйти?')) {
+					Broadcast.logOut();
+				} else {
+					return false;
+				}
+			};
+		}
+		
         /**
          * @type Boolean выполняется ли сейчас добавление заказа
          */
@@ -726,7 +780,7 @@ var DateProc = {
 };
 
 /* Инициализируем страницу */
-Layout.setUpAddOrderDialog();
+Layout.setUp();
 
 /* Вешаем прослушку событий postMessage */
 Broadcast.setUp();

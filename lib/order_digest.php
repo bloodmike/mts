@@ -9,6 +9,11 @@ namespace Digest;
 use Exception;
 
 /**
+ * Ограничение сверху на количество записей в дайджесте, которые следует считать при проверке наличия новых записей
+ */
+const NEW_ORDERS_COUNT_LIMIT = 100;
+
+/**
  * @param int $userId ID заказчика
  * @param int $orderId ID заказа
  * 
@@ -49,6 +54,35 @@ function findHostId($userId, $orderId, $ts) {
 }
 
 /**
+ * @param \mysqli $link подключение к базе данных с информацией о шардах дайджеста
+ * @param int $ts unix-время, по которому определяется период, часть которого нужно искать в дайджесте
+ * 
+ * @return int[] ID хостов, на которых расположены части дайджеста, включающие указанный период времени
+ */
+function findHostIdsForTime($link, $ts) {
+    return \Database\fetchSingle(
+            $link, 
+            'SELECT host_id '
+            . 'FROM orders_digest_shards '
+            . 'WHERE from_ts <= ' . $ts . ' AND ' . $ts . ' < to_ts');
+}
+
+/**
+ * @param \mysqli $link подключение к базе данных с информацией о шардах дайджеста
+ * @param int $ts unix-время, по которому определяется период, часть которого нужно искать в дайджесте
+ * 
+ * @return array данные хостов, на которых расположены части дайджеста, включающие указанный период времени:
+ *                  [host_id, from_ts, to_ts]
+ */
+function findHostsInfoForTime($link, $ts) {
+    return \Database\fetchAll(
+            $link, 
+            'SELECT host_id, from_ts, to_ts '
+            . 'FROM orders_digest_shards '
+            . 'WHERE from_ts <= ' . $ts . ' AND ' . $ts . ' < to_ts');
+}
+
+/**
  * Загружает заказы из дайджеста
  * 
  * @global int $rootDatabaseHostId ID хоста, к которому нужно обращаться по умолчанию
@@ -73,15 +107,13 @@ function loadOrders($limit, $maxTs, $ignoreUserId, $ignoreOrderId) {
 		// условие для исключения последнего в списке заказа от предыдущего запроса
         $where = '(ts = ' . $maxTs . ' AND user_id = ' . $ignoreUserId . ' AND order_id < ' . $ignoreOrderId . ') OR '
                         . '(ts = ' . $maxTs . ' AND user_id < ' . $ignoreUserId . ') OR ts < ' . $maxTs;
+	} else {
+		$where = 'ts <= ' . $maxTs;
 	}
 	
     do {
-        $hostIds = \Database\fetchSingle(
-                $link, 
-                'SELECT host_id, from_ts '
-                . 'FROM orders_digest_shards '
-                . 'WHERE from_ts <= ' . $maxTs . ' AND ' . $maxTs . ' < to_ts');
-		
+        $hostIds = findHostIdsForTime($link, $maxTs);
+        
         if (count($hostIds) == 0) {
             break;
         }
@@ -152,4 +184,55 @@ function mergeSortOrders($shardOrders, $limit) {
     } while (!$allEmpty && count($result) < $limit);
     
     return $result;
+}
+
+/**
+ * @param int $minTs минимальное unix-время заказа (включительно)
+ * @param int $firstUserId ID заказчика первого заказа, который нужно пропустить (0 - заказы пропускать не нужно)
+ * @param int $firstOrderId ID первого заказа, который нужно пропустить (0 - заказы пропускать не нужно)
+ * @param int $ignoredCount количество записей, которые следует проигнорировать
+ * 
+ * @return int количество заказов в ленте, которые находятся выше указанного времени/заказа, за вычетом указанного количества игнорируемых записей;
+ *              воизбежание перегрузок при передаче старого значения minTs верхний предел этой величины - 100.
+ */
+function loadNewOrdersCount($minTs, $firstUserId, $firstOrderId, $ignoredCount) {
+    global $rootDatabaseHostId;
+    $link = \Database\getConnectionOrFall($rootDatabaseHostId);
+    
+    $newCount = 0;
+    
+    do {
+        $hostsInfo = findHostsInfoForTime($link, $minTs);
+        if (count($hostsInfo) == 0) {
+            break;
+        }
+        
+        if ($firstOrderId > 0 && $firstUserId > 0) {
+            $where = '(ts=' . $minTs . ' AND user_id=' . $firstUserId . ' AND order_id > ' . $firstOrderId . ') OR '
+                    . '(ts=' . $minTs . ' AND user_id > ' . $firstUserId . ') OR '
+                    . 'ts > ' . $minTs;
+            $firstOrderId = 0;
+            $firstUserId = 0;
+        } else {
+            $where = 'ts >= ' . $minTs;
+        }
+        
+        foreach ($hostsInfo as $digestHostInfo) {
+            $link = \Database\getConnectionOrFall($digestHostInfo['host_id']);
+            $newCount += (int) \Database\fetchOne(
+                    $link, 
+                    'SELECT COUNT(*) FROM orders_digest WHERE ' . $where);
+            
+            $minTs = max($minTs, $digestHostInfo['to_ts']);
+            
+            if ($newCount >= NEW_ORDERS_COUNT_LIMIT + $ignoredCount) {
+                // если найдено более 100 новых записей - останавливаем проверку
+                break;
+            }
+        }
+        
+    } while ($newCount < NEW_ORDERS_COUNT_LIMIT + $ignoredCount);
+    
+    
+    return max(0, $newCount - $ignoredCount);
 }

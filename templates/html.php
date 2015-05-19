@@ -19,14 +19,14 @@
 				<div id="header-bar">
 					<a href="/" id="header-logo">Orders</a>
 
-					<?if(\Auth\getCurrentUserId() > 0){?>
+					<?if(\Auth\getCurrentUserId() > 0 && $pageMenu != 'login'){?>
 					<div id="header-menu">
 						<span id="header-menu__open-dialog" class="header-menu__open-dialog" title="Добавить заказ">Добавить заказ</span>
-						<a href="/feed.php"<?=($pageMenu == 'feed' ? ' class="selected"' : '')?>>Заказы</a>
-						<a href="/my_orders.php"<?=($pageMenu == 'my_orders' ? ' class="selected"' : '')?>>Мои заказы</a>
-						<a href="/finished_orders.php"<?=($pageMenu == 'finished_orders' ? ' class="selected"' : '')?>>Выполненные заказы</a>
+						<a href="/feed.php"<?=($pageMenu == 'feed' ? ' class="selected"' : '');?>>Заказы</a>
+						<a href="/my_orders.php"<?=($pageMenu == 'my_orders' ? ' class="selected"' : '');?>>Мои заказы</a>
+						<a href="/finished_orders.php"<?=($pageMenu == 'finished_orders' ? ' class="selected"' : '');?>>Выполненные заказы</a>
 						
-						<a href="/logout.php" id="header-menu__logout" onclick="return confirm('Хотите выйти?');">Выход</a>
+						<a href="/logout.php" id="header-menu__logout">Выход</a>
 						<span id="header-balance" class="header-balance" title="Баланс"><?=number_format($currentUser['balance'], 2, '.', '');?></span>
 					</div>
 					<?}?>
@@ -40,7 +40,7 @@
             }
             ?></div>
         </div>
-        <?if(\Auth\getCurrentUserId() > 0){?>
+        <?if(\Auth\getCurrentUserId() > 0 && $pageMenu != 'login'){?>
 		<div id="add-order-dialog" class="add-order-dialog hidden" title="Закрыть диалог">
 			<div id="add-order-dialog__content" class="add-order-dialog__content" title="">
 				<div class="panel panel-container">
@@ -60,7 +60,7 @@
 		<?}?>
 		<script type="text/javascript" src="/js/errors.js"></script>
         <script type="text/javascript" src="/js/public.js"></script>
-        <?if(\Auth\getCurrentUserId() > 0){?>
+        <?if(\Auth\getCurrentUserId() > 0 && $pageMenu != 'login'){?>
         <script type="text/javascript" src="/js/actions.js"></script>
         <?}?>
 		<?if (isset($javascripts)) {
