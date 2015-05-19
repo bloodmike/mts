@@ -122,8 +122,6 @@ function loadOrders($limit, $maxTs, $ignoreUserId, $ignoreOrderId) {
         
         foreach ($hostIds as $hostId) {
             $digestLink = \Database\getConnectionOrFall($hostId);
-			
-			// TODO: как-то улучшить запрос
             $shardOrders[$hostId] = \Database\fetchAll(
                     $digestLink, 
                     'SELECT ts, user_id, order_id, price '
@@ -133,7 +131,7 @@ function loadOrders($limit, $maxTs, $ignoreUserId, $ignoreOrderId) {
                     . 'LIMIT ' . ($limit - count($orders)));
         }
 		
-        $foundOrders = mergeSortOrders($shardOrders, ($limit - count($orders)));
+        $foundOrders = mergeSortOrdersDesc($shardOrders, ($limit - count($orders)));
 		$lastOrder = end($foundOrders);
 		if ($lastOrder !== false) {
 			$maxTs = $lastOrder['ts'] - 1; // TODO: не должно быть -1
@@ -149,14 +147,76 @@ function loadOrders($limit, $maxTs, $ignoreUserId, $ignoreOrderId) {
 }
 
 /**
- * @todo протестировать
+ * Загружает заказы из дайджеста
  * 
+ * @global int $rootDatabaseHostId ID хоста, к которому нужно обращаться по умолчанию
+ * 
+ * @param int $limit количество загружаемых записей
+ * @param int $minTs ограничение по времени добавления сверху
+ * @param int $ignoreUserId ID заказчика заказа, который требуется пропустить
+ * @param int $ignoreOrderId ID заказа, который требуется пропустить
+ * 
+ * @return array данные заказов
+ * 
+ * @throws Exception при ошибках в работе с базой
+ */
+function loadNewOrders($limit, $minTs, $ignoreUserId, $ignoreOrderId) {
+    global $rootDatabaseHostId;
+    
+    $link = \Database\getConnectionOrFall($rootDatabaseHostId);
+    $orders = [];
+    
+	$where = '';
+	if ($ignoreUserId > 0 && $ignoreOrderId > 0) {
+		// условие для исключения последнего в списке заказа от предыдущего запроса
+        $where = '(ts = ' . $minTs . ' AND user_id = ' . $ignoreUserId . ' AND order_id > ' . $ignoreOrderId . ') OR '
+                        . '(ts = ' . $minTs . ' AND user_id > ' . $ignoreUserId . ') OR ts > ' . $minTs;
+	} else {
+		$where = 'ts >= ' . $minTs;
+	}
+	
+    do {
+        $hostIds = findHostIdsForTime($link, $minTs);
+        
+        if (count($hostIds) == 0) {
+            break;
+        }
+        
+        $shardOrders = [];
+        
+        foreach ($hostIds as $hostId) {
+            $digestLink = \Database\getConnectionOrFall($hostId);
+            $shardOrders[$hostId] = \Database\fetchAll(
+                    $digestLink, 
+                    'SELECT ts, user_id, order_id, price '
+                    . 'FROM orders_digest '
+                    . 'WHERE ' . $where . ' '
+                    . 'ORDER BY ts ASC, user_id ASC, order_id ASC '
+                    . 'LIMIT ' . ($limit - count($orders)));
+        }
+		
+        $foundOrders = mergeSortOrdersAsc($shardOrders, ($limit - count($orders)));
+		$lastOrder = end($foundOrders);
+		if ($lastOrder !== false) {
+			$minTs = $lastOrder['ts'] - 1; // TODO: не должно быть -1
+		} else {
+			break;
+		}
+		
+		$where = 'ts > ' . $minTs;
+        $orders = array_merge($orders, $foundOrders);
+    } while (count($orders) < $limit);
+    
+    return $orders;
+}
+
+/**
  * @param array $shardOrders сгруппированные по ID хостов заказы
  * @param int $limit предельное количество записей в списке, который нужно получить
  * 
  * @return array отсортированный список, состоящий из переданных заказов и ограниченный по длине
  */
-function mergeSortOrders($shardOrders, $limit) {
+function mergeSortOrdersDesc($shardOrders, $limit) {
     $result = [];
     
     if (count($shardOrders) == 1) {
@@ -180,6 +240,42 @@ function mergeSortOrders($shardOrders, $limit) {
         if ($maxOrderTsKey !== null) {
             $result[] = current($shardOrders[$maxOrderTsKey]);
             next($shardOrders[$maxOrderTsKey]);
+        }
+    } while (!$allEmpty && count($result) < $limit);
+    
+    return $result;
+}
+
+/**
+ * @param array $shardOrders сгруппированные по ID хостов заказы
+ * @param int $limit предельное количество записей в списке, который нужно получить
+ * 
+ * @return array отсортированный по возрастанию список, состоящий из переданных заказов и ограниченный по длине
+ */
+function mergeSortOrdersAsc($shardOrders, $limit) {
+    $result = [];
+    
+    if (count($shardOrders) == 1) {
+        return array_slice(reset($shardOrders), 0, $limit);
+    }
+    
+    do {
+        $allEmpty = true;
+        $minOrderTsKey = null;
+        
+        foreach ($shardOrders as $key => &$orders) {
+            if (current($orders) !== false &&
+                    ($minOrderTsKey === null || 
+                    current($shardOrders[$minOrderTsKey])['ts'] > current($orders)['ts'])) {
+                
+                $minOrderTsKey = $key;
+                $allEmpty = false;
+            }
+        }
+        
+        if ($minOrderTsKey !== null) {
+            $result[] = current($shardOrders[$minOrderTsKey]);
+            next($shardOrders[$minOrderTsKey]);
         }
     } while (!$allEmpty && count($result) < $limit);
     

@@ -18,11 +18,11 @@ function loadNewDigest() {
             return ['orders' => []];
         }
         
-		$ignoreUserId = (int) filter_input(INPUT_GET, 'last_user_id', FILTER_SANITIZE_NUMBER_INT);
-		$ignoreOrderId = (int) filter_input(INPUT_GET, 'last_order_id', FILTER_SANITIZE_NUMBER_INT);
+		$ignoreUserId = (int) filter_input(INPUT_GET, 'first_user_id', FILTER_SANITIZE_NUMBER_INT);
+		$ignoreOrderId = (int) filter_input(INPUT_GET, 'first_order_id', FILTER_SANITIZE_NUMBER_INT);
 		
-		$limit = DIGEST_FEED_LIMIT;		
-        $response['orders'] = \Digest\loadOrders($limit, $ts, $ignoreUserId, $ignoreOrderId);
+		$limit = DIGEST_FEED_NEW_LIMIT;		
+        $response['orders'] = \Digest\loadNewOrders($limit, $ts, $ignoreUserId, $ignoreOrderId);
 		$response['orders_more'] = (count($response['orders']) >= $limit);
 		
         $userIdsMap = [];
@@ -40,4 +40,4 @@ function loadNewDigest() {
     return $response;
 }
 
-echo json_encode(loadNewDigestCount(), JSON_UNESCAPED_UNICODE);
+echo json_encode(loadNewDigest(), JSON_UNESCAPED_UNICODE);

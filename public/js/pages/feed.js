@@ -21,6 +21,11 @@
      */
     var ordersListLoading = false;
         
+    /**
+     * @type {Boolean} выполняется ли в настоящий момент загрузка новых заказов
+     */
+    var ordersNewLoading = false;
+    
 	/**
      * @type {Element} Кнопка "Показать новые заказы" вверху списка заказов
      */
@@ -287,8 +292,8 @@
 				"/feed_load.php?ts=" + time + query,
 				null,
 				function(json) {
-                    var Response = new JsonResponse(json);
                     Html.removeClass(ordersListLoadMore, 'loading');
+                    var Response = new JsonResponse(json);
                     
                     if (Response.hasErrors()) {
                         Errors.showFromResponse(Response);
@@ -315,7 +320,63 @@
 				});
 	};
 	
+	/**
+	 * Вызывает загрузку новых заказов ленты с последующим добавлением их в начало списка
+	 * 
+	 * @param {Number} time ограничение по времени добавления заказа снизу
+	 * @param {Number} firstUserId ID заказчика первого заказа
+	 * @param {Number} firstOrderId ID первого заказа
+	 */
+    var loadNewFeed = function(time, firstUserId, firstOrderId) {
+        ordersNewLoading = true;
+        Html.addClass(ordersListLoadNew, 'loading');
+        
+		var query = '';
+		if (firstUserId > 0 && firstOrderId > 0) {
+			query = '&first_user_id=' + firstUserId.toString() + '&first_order_id=' + firstOrderId.toString();
+		}
+        
+		ajaxJson(
+				"GET", 
+				"/feed_load_new.php?ts=" + time + query,
+				null,
+				function(json) {
+                    Html.removeClass(ordersListLoadNew, 'loading');
+                    var Response = new JsonResponse(json);
+                    
+                    if (Response.hasErrors()) {
+                        Errors.showFromResponse(Response);
+                    }
+					
+					var loginsMap = Response.getField('users', {});
+					
+                    UserStorage.addLogins(loginsMap);
+					Broadcast.userLoginsLoaded(loginsMap);
+					
+                    prependOrdersList(Response.getField('orders', []));
+                    
+					if (Response.getField('orders_more')) {
+						Html.removeClass(ordersListLoadNew, 'hidden');
+						Html.addClass(ordersListNewCount, 'hidden');
+					} else {
+						Html.addClass(ordersListLoadMore, 'hidden');
+					}
+					
+					ordersNewLoading = false;
+				},
+				function(xhr) {
+                    Html.removeClass(ordersListLoadNew, 'loading');
+                    ordersNewLoading = false;
+				});
+    };
+    
 	loadFeed(ordersMinTs, ordersLastUserId, ordersLastOrderId);
+    
+    ordersListLoadNew.onclick = function() {
+        if (!ordersNewLoading) {
+            loadNewFeed(ordersMaxTs, ordersFirstUserId, ordersFirstOrderId);
+        }
+    };
     
     ordersListLoadMore.onclick = function() {
         if (!ordersListLoading) {
@@ -359,13 +420,13 @@
      */
     var toggleNewOrdersLoadButton = function(newOrdersCount, ignoredCount) {
         var visibleNewCount = newOrdersCount - (ignoredOrdersCount - ignoredCount);
-        
         if (visibleNewCount <= 0) {
             // скрыть кнопку
             Html.addClass(ordersListLoadNew, 'hidden');
         } else {
-            // показать кнопку и обновить счётчик
+            // показать кнопку, показать и обновить счётчик
             Html.removeClass(ordersListLoadNew, 'hidden');
+            Html.removeClass(ordersListNewCount, 'hidden');
             ordersListNewCount.innerHTML = visibleNewCount > 99 ? '99+' : visibleNewCount.toString();
         }
     };

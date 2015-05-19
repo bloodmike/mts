@@ -16,7 +16,7 @@ function htmlContent() {
     ?>
 <div class="panel panel-container">
     <div id="orders-list__load-new" class="orders-list__load-new hidden">
-        <span>Показать новые заказы (<span id="orders-list__new-count"></span>)</span>
+        <span>Показать новые заказы <span id="orders-list__new-count"></span></span>
     </div>
 	<div id="orders-list" class="orders-list"></div>
     <div id="orders-list__load-more" class="orders-list__load-more hidden">

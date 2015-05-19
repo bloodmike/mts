@@ -400,6 +400,10 @@ html {
     text-align: center;
 }
 
+#orders-list__new-count.hidden {
+    display: none;
+}
+
 .orders-list__load-more.loading,
 .orders-list__load-new.loading {
     background-image: url(/img/upload.gif);

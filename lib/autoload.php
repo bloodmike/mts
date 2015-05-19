@@ -29,6 +29,10 @@ if (!defined('DIGEST_FEED_LIMIT')) {
     define('DIGEST_FEED_LIMIT', 12);
 }
 
+if (!defined('DIGEST_FEED_NEW_LIMIT')) {
+    define('DIGEST_FEED_NEW_LIMIT', 12);
+}
+
 if (!defined('MY_ORDERS_LOAD_LIMIT')) {
     define('MY_ORDERS_LOAD_LIMIT', 10);
 }
