@@ -25,18 +25,28 @@ require_once(__DIR__ . '/action.php');
 require_once(__DIR__ . '/response.php');
 
 // можно определить эти константы в конфиге
+
+// количество загружаемых в ленту записей
 if (!defined('DIGEST_FEED_LIMIT')) {
     define('DIGEST_FEED_LIMIT', 12);
 }
 
+// количество загружаемых новых записей в ленту
 if (!defined('DIGEST_FEED_NEW_LIMIT')) {
     define('DIGEST_FEED_NEW_LIMIT', 12);
 }
 
+// количество проверок в запросе обновлений ленты
+if (!defined('FEED_CHECKS_COUNT')) {
+    define('FEED_CHECKS_COUNT', 10);
+}
+
+// количество загружаемых заказов на странице "Мои заказы"
 if (!defined('MY_ORDERS_LOAD_LIMIT')) {
     define('MY_ORDERS_LOAD_LIMIT', 10);
 }
 
+// количество загружаемых заказов на странице "Выполненные заказы"
 if (!defined('FINISHED_ORDERS_LOAD_LIMIT')) {
     define('FINISHED_ORDERS_LOAD_LIMIT', 10);
 }

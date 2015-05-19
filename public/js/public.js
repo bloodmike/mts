@@ -37,7 +37,6 @@ function object2String(object, prefix) {
  * @return {XMLHttpRequest}
  */
 function ajaxJson(method, url, parameters, callback, callbackFail) {
-    
     callbackFail = callbackFail || null;
     
     var xhr = new XMLHttpRequest();
@@ -57,7 +56,7 @@ function ajaxJson(method, url, parameters, callback, callbackFail) {
             if (xhr.status === 200 && typeof json == 'object') {
                 callback(json);
                 return;
-            } else { 
+            } else if (!!xhr.getAllResponseHeaders()) { 
                 Errors.show('При выполнении запроса возникла ошибка.');
                 if (callbackFail !== null) {
                     callbackFail(xhr);

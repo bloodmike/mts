@@ -35,7 +35,7 @@ function feedCheck() {
             }
             $i++;
             sleep(1);
-        } while ($i < 10);
+        } while ($i < FEED_CHECKS_COUNT);
         
         $response['orders_count'] = $ordersCount;
         

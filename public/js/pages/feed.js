@@ -96,7 +96,9 @@
 		var div = document.createElement('div');
 		div.className = 'order';
 		div.id = getOrderDivId(order['user_id'], order['order_id']);
-		div.ts = order['ts'];
+		div.ts = parseInt(order['ts']);
+		div.userId = parseInt(order['user_id']);
+		div.orderId = parseInt(order['order_id']);
 
 		var divOwner = document.createElement('div');
 		divOwner.className = 'order__owner';
@@ -148,15 +150,17 @@
 						var Response = new JsonResponse(json);
 						if (Response.hasErrors()) {
 							if (Response.hasError(4)) {
-								div.parentNode.removeChild(div);
+								Html.addClass(div, 'order_finished-by-other');
+								var divFinishedByOther = document.createElement('div');
+								divFinishedByOther.className = 'order__finished-by-other-message';
+								divFinishedByOther.innerHTML = 'Выполнен другим пользователем';
+								div.appendChild(divFinishedByOther);
+							} else {
+								Errors.showFromResponse(Response);
 							}
-							Errors.showFromResponse(Response);
 						} else {
 							Html.addClass(div, 'order_finished');
-							Layout.updateBalance(parseFloat(Response.getField('balanceDelta')));
-							setTimeout(function() {
-								div.parentNode.removeChild(div);
-							}, 1000);
+							Layout.updateBalance(parseFloat(Response.getField('balanceDelta')));							
 							Broadcast.orderExecuted(
                                     order['user_id'], 
                                     order['order_id'], 
@@ -198,19 +202,11 @@
 	 * @returns {Element|null} блок, перед которым нужно разместить указанный заказ, или null если заказ нужно разместить в конце списка
 	 */
 	var getNodeToInsertBefore = function(userId, orderId, ts) {
-		
-		var prevNode = null;
-		var orderDivId = getOrderDivId(userId, orderId);
-		
-		for (var i in ordersList.childNodes) {
-			
+		for (var i = 0; i < ordersList.childNodes.length; i++) {
 			var div = ordersList.childNodes[i];
-			var divTs = parseInt(div.ts);
-			if (divTs > ts || (divTs === ts && div.id > orderDivId)) {
-				return prevNode;
+			if (div.ts < ts || (div.ts === ts && div.userId < userId) || (div.ts === ts && div.userId === userId && div.orderId < orderId)) {
+				return div;
 			}
-			
-			prevNode = div;
 		}
 		
 		return null;
@@ -248,13 +244,6 @@
 	var appendOrdersList = function(orders) {
         for (var i in orders) {
             var order = orders[i];
-            
-            if (!firstLoadMade) {
-                ordersMaxTs = order['ts'];
-                ordersFirstOrderId = order['order_id'];
-                ordersFirstUserId = order['user_id'];
-                firstLoadMade = true;
-            }
             
             if (!orderExists(order['user_id'], order['order_id'])) {
                 ordersList.appendChild(createOrderElement(order));
@@ -304,7 +293,18 @@
                     UserStorage.addLogins(loginsMap);
 					Broadcast.userLoginsLoaded(loginsMap);
 					
-                    appendOrdersList(Response.getField('orders', []));
+					var orders = Response.getField('orders', []);
+            
+					if (!firstLoadMade) {
+						firstLoadMade = true;
+						if (orders.length > 0) {
+							ordersMaxTs = orders[0]['ts'];
+							ordersFirstOrderId = orders[0]['order_id'];
+							ordersFirstUserId = orders[0]['user_id'];
+						}
+					}
+					
+                    appendOrdersList(orders);
                     
 					if (Response.getField('orders_more')) {
 						Html.removeClass(ordersListLoadMore, 'hidden');
@@ -359,7 +359,7 @@
 						Html.removeClass(ordersListLoadNew, 'hidden');
 						Html.addClass(ordersListNewCount, 'hidden');
 					} else {
-						Html.addClass(ordersListLoadMore, 'hidden');
+						Html.addClass(ordersListLoadNew, 'hidden');
 					}
 					
 					ordersNewLoading = false;
@@ -401,7 +401,8 @@
             var orderDiv = createOrderElement({
                 user_id:	currentUser.id,
                 order_id:	order.order_id,
-                price:		order.price
+                price:		order.price,
+				ts:			order.ts
             });
 
             ordersList.insertBefore(orderDiv, ordersList.firstChild);
@@ -439,7 +440,6 @@
             if (!checkNewOrdersExists(ignoredOrdersCount)) {
                 setUpNewOrdersCheck();
             }
-            
         }, 5000);
     };
     
@@ -499,4 +499,7 @@
 		}
 		Layout.updateBalance(parseFloat(balanceDelta));
 	};
+	
+	// включаем периодический опрос обновлений ленты
+	setUpNewOrdersCheck();
 })();

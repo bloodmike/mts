@@ -176,15 +176,17 @@ function loadNewOrders($limit, $minTs, $ignoreUserId, $ignoreOrderId) {
 	}
 	
     do {
-        $hostIds = findHostIdsForTime($link, $minTs);
+        $hostsInfo = findHostsInfoForTime($link, $minTs);
         
-        if (count($hostIds) == 0) {
+        if (count($hostsInfo) == 0) {
             break;
         }
         
         $shardOrders = [];
-        
-        foreach ($hostIds as $hostId) {
+		$minTs = null;
+		
+        foreach ($hostsInfo as $hostInfo) {
+			$hostId = $hostInfo['host_id'];
             $digestLink = \Database\getConnectionOrFall($hostId);
             $shardOrders[$hostId] = \Database\fetchAll(
                     $digestLink, 
@@ -193,17 +195,19 @@ function loadNewOrders($limit, $minTs, $ignoreUserId, $ignoreOrderId) {
                     . 'WHERE ' . $where . ' '
                     . 'ORDER BY ts ASC, user_id ASC, order_id ASC '
                     . 'LIMIT ' . ($limit - count($orders)));
+			
+			if ($minTs === null || $minTs > $hostInfo['to_ts']) {
+				$minTs = $hostInfo['to_ts'];
+			}
         }
 		
         $foundOrders = mergeSortOrdersAsc($shardOrders, ($limit - count($orders)));
 		$lastOrder = end($foundOrders);
-		if ($lastOrder !== false) {
-			$minTs = $lastOrder['ts'] - 1; // TODO: не должно быть -1
-		} else {
+		if ($lastOrder === false) {
 			break;
 		}
 		
-		$where = 'ts > ' . $minTs;
+		$where = 'ts >= ' . $minTs;
         $orders = array_merge($orders, $foundOrders);
     } while (count($orders) < $limit);
     

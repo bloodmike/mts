@@ -370,6 +370,11 @@ html {
 	border: 1px solid #d4bc4c !important;
 }
 
+.order.order_finished-by-other {
+    background: #F0F2F5 !important;
+	border: 1px solid #F0F2F5 !important;
+}
+
 .order__execute {
     cursor: pointer;
 }
@@ -378,7 +383,8 @@ html {
 	color: #444;
 }
 
-.order_finished .order__execute {
+.order_finished .order__execute,
+.order_finished-by-other .order__execute{
     display: none;
 }
 
@@ -398,6 +404,14 @@ html {
     display: block;
     padding: 10px;
     text-align: center;
+}
+
+#orders-list__new-count::before {
+	content: "(";
+}
+
+#orders-list__new-count::after {
+	content: ")";
 }
 
 #orders-list__new-count.hidden {
@@ -506,6 +520,15 @@ html {
 
 .order__owner-is-current {
     position: absolute;
+    font-size: 13px;
+    font-style: italic;
+    opacity: 0.5;
+	bottom: 15px;
+    right: 16px;
+}
+
+.order__finished-by-other-message {
+	position: absolute;
     font-size: 13px;
     font-style: italic;
     opacity: 0.5;
